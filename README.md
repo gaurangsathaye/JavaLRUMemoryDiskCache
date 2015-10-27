@@ -28,3 +28,8 @@ public ExampleMyObjectToCache loadData(String key) throws Exception {
     return your_api_or_dao.loadObject(key);
 }
 ```
+
+Other points:  
+* The cache key must be a string.  
+* You cannot store null values in the cache. So your `loadData(String key)` method should not return a null object.  Otherwise `public T get(String key)` will throw an exception.  
+* The `com.sg.simple.lru.cache.CacheEntry` object is a utility wrapper object you can store your real object in.  It has a default timestamp for when the object is created.  ie: `public class ExampleCache extends AbstractCacheService<CacheEntry<YourObjectToCache>>`
