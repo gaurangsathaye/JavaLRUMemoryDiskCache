@@ -10,7 +10,7 @@ Some of the benefits of using the cache are...
 
 (See the `com.example.sg.simple.lru` package for an example and details on how to use. Start with `Example1.java`)
 
-Here are some of the basics to create your cache:  
+## Here are some of the basics to create your cache:  
 
 In your cache, override the two methods `isCacheItemValid` and `loadData`: (You do not call the `isCacheItemValid` and `loadData` methods directly.  You just need to define them, and they will be called by the internal cache as needed.  
 
@@ -50,13 +50,17 @@ public class ExampleCache1 extends AbstractCacheService<ExampleMyObjectToCache>{
 }
 ```
 
-And finally use your cache:  
+## And finally use your cache:  
 ```java
 public static ExampleCache1 cache = new ExampleCache1("ExampleCache1", 10000);
 ExampleMyObjectToCache myObject = cache.get("someKeyForYourCachedObject");
 ```
 
-Other points:  
+## Other points:  
 * The cache key must be a string. 
 * You cannot store null values in the cache. So your `loadData(String key)` method should not return a null object.  Otherwise `public T get(String key)` will throw an exception.  
 * The `com.sg.simple.lru.cache.CacheEntry` object is a utility wrapper object you can store your real object in.  It has a default timestamp for when the object is created.  ie: `public class ExampleCache extends AbstractCacheService<CacheEntry<YourObjectToCache>>`
+
+## To do:
+* Persist cache on file system.
+* Asynch load cache item if invalid and return cached entry immediately.
