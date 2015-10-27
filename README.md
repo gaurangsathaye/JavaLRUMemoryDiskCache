@@ -13,6 +13,7 @@ Some of the benefits of using the cache are...
 Here are some of the basics to create your cache:  
 
 In your cache, override the two methods `isCacheItemValid` and `loadData`: (You do not call the `isCacheItemValid` and `loadData` methods directly.  You just need to define them, and they will be called by the internal cache as needed.  
+
 In the constructor call, `cacheName` is the name of your cache and is shown in the `getStats` call.  `cacheSize` is the total number of items your cache will store.  When you add more items in the the cache that are greater than `cacheSize`, older items are removed on an LRU (Least Recently Used) basis.  
 ```java
 public class ExampleCache1 extends AbstractCacheService<ExampleMyObjectToCache>{
