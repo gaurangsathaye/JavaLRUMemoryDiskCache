@@ -63,7 +63,8 @@ Map<String, Object> stats = cache.getStats()
 * The `com.sg.simple.lru.cache.CacheEntry` object is a utility wrapper object you can store your real object in.  It has a default timestamp for when the object is created.  ie: `public class ExampleCache extends AbstractCacheService<CacheEntry<YourObjectToCache>>`
 
 ## Install
-* Download https://github.com/gaurangsathaye/JavaSimpleLRUCache/releases/download/1.0/JavaSimpleLRUCache-1.0.jar
+* Download https://github.com/gaurangsathaye/JavaSimpleLRUCache/releases/download/1.0/
+* From the directory you downloaded the jar, local maven install: mvn install:install-file -Dfile=JavaSimpleLRUCache-1.0.jar -DgroupId=com.sg.simple.lru.cache -DartifactId=JavaSimpleLRUCache -Dversion=1.0 -Dpackaging=jar
 
 ## To do:
 * Persist cache on file system.
