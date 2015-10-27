@@ -66,14 +66,14 @@ Map<String, Object> stats = cache.getStats()
 * Download https://github.com/gaurangsathaye/JavaSimpleLRUCache/releases/download/1.0/JavaSimpleLRUCache-1.0.jar
 * From the directory you downloaded the jar, run the following command to do a local maven install:  
   `mvn install:install-file -Dfile=JavaSimpleLRUCache-1.0.jar -DgroupId=com.sg.simple.lru.cache -DartifactId=JavaSimpleLRUCache -Dversion=1.0 -Dpackaging=jar`
-* Add to `<dependencies>`
-  ```xml
-    <dependency>
-        <groupId>com.sg.simple.lru.cache</groupId>
-        <artifactId>JavaSimpleLRUCache</artifactId>
-        <version>1.0</version>
-    </dependency>
-    ```
+* Add to `<dependencies>`  
+```xml
+<dependency>
+    <groupId>com.sg.simple.lru.cache</groupId>
+    <artifactId>JavaSimpleLRUCache</artifactId>
+    <version>1.0</version>
+</dependency>
+```
 
 ## To do:
 * Persist cache on file system.
