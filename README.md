@@ -1,2 +1,2 @@
-# JavaSimpleCache
-Java Simple Cache
+# JavaSimpleLRUCache
+Java Simple LRU Cache
