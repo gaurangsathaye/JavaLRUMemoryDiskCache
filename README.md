@@ -1,5 +1,7 @@
 # JavaSimpleLRUCache
 
+Java Simple LRU Cache
+
 This is a thread safe, easy to use Java LRU cache.  
 
 Some of the benefits of using the cache are...  
