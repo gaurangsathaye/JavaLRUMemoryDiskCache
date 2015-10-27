@@ -12,8 +12,17 @@ Here are some of the basics:
 For example, create your cache like this:  
 `public class ExampleCache1 extends AbstractCacheService<ExampleMyObjectToCache>`
 
-In your cache, override the following two methods:
+In your cache, override the following two methods: (You do not call the `isCacheItemValid` and `loadData` methods directly.  You just need to define them, and they will be called by the internal cache as needed.
 ```java
+/*
+    You decide if your cached object is valid.
+
+    You can use timestamps, last modified or any other parameters to determine
+    if you cached object is valid.
+
+    If you return true here, your cached object will be returned.
+    If you return false here, your cached object will be reloaded using your 'loadData' method.
+*/
 @Override
 public boolean isCacheItemValid(ExampleMyObjectToCache o) {
     return o.isValid();
@@ -30,6 +39,6 @@ public ExampleMyObjectToCache loadData(String key) throws Exception {
 ```
 
 Other points:  
-* The cache key must be a string.  
+* The cache key must be a string. 
 * You cannot store null values in the cache. So your `loadData(String key)` method should not return a null object.  Otherwise `public T get(String key)` will throw an exception.  
 * The `com.sg.simple.lru.cache.CacheEntry` object is a utility wrapper object you can store your real object in.  It has a default timestamp for when the object is created.  ie: `public class ExampleCache extends AbstractCacheService<CacheEntry<YourObjectToCache>>`
