@@ -50,10 +50,11 @@ public class ExampleCache1 extends AbstractCacheService<ExampleMyObjectToCache>{
 }
 ```
 
-## And finally use your cache:  
+## Use your cache:  
 ```java
 public static ExampleCache1 cache = new ExampleCache1("ExampleCache1", 10000);
 ExampleMyObjectToCache myObject = cache.get("key");
+Map<String, Object> stats = cache.getStats()
 ```
 
 ## Other points:  
