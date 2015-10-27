@@ -1,5 +1,4 @@
 # JavaSimpleLRUCache
-Java Simple LRU Cache
 
 This is a thread safe, easy to use Java LRU cache.  
 
