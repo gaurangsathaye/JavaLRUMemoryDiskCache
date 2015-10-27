@@ -7,11 +7,22 @@ import com.sg.simple.lru.cache.AbstractCacheService;
  * @author sathayeg
  */
 public class ExampleCache1 extends AbstractCacheService<ExampleMyObjectToCache>{
+    private final ExampleDao exampleDao;
 
-    public ExampleCache1(String cacheName, int cacheSize) {
+    public ExampleCache1(String cacheName, int cacheSize, ExampleDao exampleDao) {
         super(cacheName, cacheSize);
+        this.exampleDao = exampleDao;
     }
 
+    /*
+        You decide if your cached object is valid.
+
+        You can use timestamps, last modified or any other parameters to determine
+        if your cached object is valid.
+
+        If you return true here, your cached object will be returned in the 'get' call.
+        If you return false here, your cached object will be reloaded using your 'loadData' method.
+    */
     @Override
     public boolean isCacheItemValid(ExampleMyObjectToCache o) {
         return o.isValid();
@@ -23,10 +34,7 @@ public class ExampleCache1 extends AbstractCacheService<ExampleMyObjectToCache>{
     */
     @Override
     public ExampleMyObjectToCache loadData(String key) throws Exception {
-        ExampleMyObjectToCache toCache = new ExampleMyObjectToCache(key);
-        toCache.setData("The data for id: " + key);
-        toCache.setLastModfied(System.currentTimeMillis());
-        return toCache;
+        return this.exampleDao.get(key);
     }
     
 }

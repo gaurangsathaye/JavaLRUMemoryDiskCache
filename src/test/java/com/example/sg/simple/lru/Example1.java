@@ -13,7 +13,7 @@ public class Example1 {
     public static void main(String[] args) {
         try {
             //For example, create cache that can be accessed by all parts of your code.
-            cache = new ExampleCache1("ExampleCache1", 10000);
+            cache = new ExampleCache1("ExampleCache1", 10000, new ExampleDao());
             
             //Use the cache
             runExample();
