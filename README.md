@@ -6,10 +6,9 @@ Some of the benefits of using the cache are...
 * `public T get(String key)` - Gets your object and loads it in the cache if not present. You instruct how object is loaded.  There are other methods like 'getOnly' and 'putOnly', but this is probably the only method you need.   
 * `public final Map<String, Object> getStats()` - Get stats for your cache like hit ratio, cache size, hits, misses, etc.
 
-Here are some of the basics:  
-(See the `com.example.sg.simple.lru` package for an example on how to use. Start with `Example1.java`)
+(See the `com.example.sg.simple.lru` package for an example and details on how to use. Start with `Example1.java`)
 
-For example, create your cache like this:  
+Here are some of the basics.  Create your cache like this:  
 `public class ExampleCache1 extends AbstractCacheService<ExampleMyObjectToCache>`
 
 In your cache, override the following two methods: (You do not call the `isCacheItemValid` and `loadData` methods directly.  You just need to define them, and they will be called by the internal cache as needed.
