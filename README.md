@@ -8,33 +8,48 @@ Some of the benefits of using the cache are...
 
 (See the `com.example.sg.simple.lru` package for an example and details on how to use. Start with `Example1.java`)
 
-Here are some of the basics.  Create your cache like this:  
-`public class ExampleCache1 extends AbstractCacheService<ExampleMyObjectToCache>`
+Here are some of the basics to create your cache:  
 
-In your cache, override the following two methods: (You do not call the `isCacheItemValid` and `loadData` methods directly.  You just need to define them, and they will be called by the internal cache as needed.
+In your cache, override the following two methods: (You do not call the `isCacheItemValid` and `loadData` methods directly.  You just need to define them, and they will be called by the internal cache as needed. `cacheName` is the name of your cache and is shown in the `getStats` call.  `cacheSize` is the total number of items your cache will store.  When you add more items in the the cache that are greater than `cacheSize`, older items are removed on an LRU (Least Recently Used) basis.  
 ```java
-/*
-    You decide if your cached object is valid.
+public class ExampleCache1 extends AbstractCacheService<ExampleMyObjectToCache>{
+    public ExampleCache1(String cacheName, int cacheSize) {
+        super(cacheName, cacheSize);
+    }
 
-    You can use timestamps, last modified or any other parameters to determine
-    if you cached object is valid.
+    /*
+        You decide if your cached object is valid.
 
-    If you return true here, your cached object will be returned.
-    If you return false here, your cached object will be reloaded using your 'loadData' method.
-*/
-@Override
-public boolean isCacheItemValid(ExampleMyObjectToCache o) {
-    return o.isValid();
+        You can use timestamps, last modified or any other parameters to determine
+        if your cached object is valid.
+
+        If you return true here, your cached object will be returned in the 'get' call.
+        If you return false here, your cached object will be reloaded using your 'loadData' method.
+    */
+    @Override
+    public boolean isCacheItemValid(ExampleMyObjectToCache o) {
+        return o.isValid();
+    }
+
+    /*
+        You decide how to load the object you want to cache.
+        This could be an api call, database call, etc.
+    */
+    @Override
+    public ExampleMyObjectToCache loadData(String key) throws Exception {
+        ExampleMyObjectToCache toCache = new ExampleMyObjectToCache(key);
+        toCache.setData("The data for id: " + key);
+        toCache.setLastModfied(System.currentTimeMillis());
+        return toCache;
+    }
+    
 }
+```
 
-/*
-    You decide how to load the object you want to cache.
-    This could be an api call, database call, etc.
-*/
-@Override
-public ExampleMyObjectToCache loadData(String key) throws Exception {
-    return your_api_or_dao.loadObject(key);
-}
+And finally use your cache:  
+```java
+//
+public static ExampleCache1 cache = new ExampleCache1("ExampleCache1", 10000);
 ```
 
 Other points:  
