@@ -17,8 +17,11 @@ In your cache, override the two methods `isCacheItemValid` and `loadData`: (You 
 In the constructor call, `cacheName` is the name of your cache and is shown in the `getStats` call.  `cacheSize` is the total number of items your cache will store.  When you add more items in the the cache that are greater than `cacheSize`, older items are removed on an LRU (Least Recently Used) basis.  
 ```java
 public class ExampleCache1 extends AbstractCacheService<ExampleMyObjectToCache>{
-    public ExampleCache1(String cacheName, int cacheSize) {
+    private final ExampleDao exampleDao;
+
+    public ExampleCache1(String cacheName, int cacheSize, ExampleDao exampleDao) {
         super(cacheName, cacheSize);
+        this.exampleDao = exampleDao;
     }
 
     /*
@@ -41,10 +44,7 @@ public class ExampleCache1 extends AbstractCacheService<ExampleMyObjectToCache>{
     */
     @Override
     public ExampleMyObjectToCache loadData(String key) throws Exception {
-        ExampleMyObjectToCache toCache = new ExampleMyObjectToCache(key);
-        toCache.setData("The data for id: " + key);
-        toCache.setLastModfied(System.currentTimeMillis());
-        return toCache;
+        return this.exampleDao.get(key);
     }
     
 }
@@ -53,12 +53,12 @@ public class ExampleCache1 extends AbstractCacheService<ExampleMyObjectToCache>{
 ## And finally use your cache:  
 ```java
 public static ExampleCache1 cache = new ExampleCache1("ExampleCache1", 10000);
-ExampleMyObjectToCache myObject = cache.get("someKeyForYourCachedObject");
+ExampleMyObjectToCache myObject = cache.get("key");
 ```
 
 ## Other points:  
 * The cache key must be a string. 
-* You cannot store null values in the cache. So your `loadData(String key)` method should not return a null object.  Otherwise `public T get(String key)` will throw an exception.  
+* You cannot store null values in the cache. So if your `loadData(String key)` method returns a null object, the `public T get(String key)` call will throw an exception.  
 * The `com.sg.simple.lru.cache.CacheEntry` object is a utility wrapper object you can store your real object in.  It has a default timestamp for when the object is created.  ie: `public class ExampleCache extends AbstractCacheService<CacheEntry<YourObjectToCache>>`
 
 ## To do:
