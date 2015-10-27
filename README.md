@@ -62,10 +62,18 @@ Map<String, Object> stats = cache.getStats()
 * You cannot store null values in the cache. So if your `loadData(String key)` method returns a null object, the `public T get(String key)` call will throw an exception.  
 * The `com.sg.simple.lru.cache.CacheEntry` object is a utility wrapper object you can store your real object in.  It has a default timestamp for when the object is created.  ie: `public class ExampleCache extends AbstractCacheService<CacheEntry<YourObjectToCache>>`
 
-## Install
+## Install (Maven)
 * Download https://github.com/gaurangsathaye/JavaSimpleLRUCache/releases/download/1.0/JavaSimpleLRUCache-1.0.jar
 * From the directory you downloaded the jar, run the following command to do a local maven install:  
   `mvn install:install-file -Dfile=JavaSimpleLRUCache-1.0.jar -DgroupId=com.sg.simple.lru.cache -DartifactId=JavaSimpleLRUCache -Dversion=1.0 -Dpackaging=jar`
+* Add to `<dependencies>`
+  ```xml
+    <dependency>
+        <groupId>com.sg.simple.lru.cache</groupId>
+        <artifactId>JavaSimpleLRUCache</artifactId>
+        <version>1.0</version>
+    </dependency>
+    ```
 
 ## To do:
 * Persist cache on file system.
