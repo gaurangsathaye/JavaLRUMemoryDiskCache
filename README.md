@@ -85,7 +85,7 @@ Map<String, Object> stats = cache.getStats()
 * The `com.lru.memory.disk.cache.CacheEntry` object is a utility wrapper object you can store your real object in.  It has a default timestamp for when the object is created.  ie: `public class ExampleCache extends AbstractCacheService<CacheEntry<YourObjectToCache>>`
 
 ## Install (Maven)
-* Download https://github.com/gaurangsathaye/JavaSimpleLRUCache/releases/download/1.0/JavaSimpleLRUCache-1.0.jar
+* Download https://github.com/gaurangsathaye/JavaLRUMemoryDiskCache/releases/download/1.0/JavaLRUMemoryDiskCache-1.0.jar
 * From the directory you downloaded the jar, run the following command to do a local maven install:  
   `mvn install:install-file -Dfile=JavaLRUMemoryDiskCache-1.0.jar -DgroupId=com.lru.memory.disk.cache -DartifactId=JavaLRUMemoryDiskCache -Dversion=1.0 -Dpackaging=jar`
 * Add to `<dependencies>`  
