@@ -17,7 +17,12 @@ Some of the benefits of using the cache are...
 
 In your cache, override the two methods `isCacheItemValid` and `loadData`: (You do not call the `isCacheItemValid` and `loadData` methods directly.  You just need to define them, and they will be called by the internal cache as needed.  
 
-In the constructor call, `cacheName` is the name of your cache and is shown in the `getStats` call.  `cacheSize` is the total number of items your cache will store.  When you add more items in the the cache that are greater than `cacheSize`, older items are removed on an LRU (Least Recently Used) basis.  
+In the constructor call,  
+* `cacheName` is the name of your cache and is shown in the `getStats` call.  
+* `cacheSize` is the total number of items your cache will store.  When you add more items in the the cache that are greater than `cacheSize`, older items are removed on an LRU (Least Recently Used) basis.  
+* `dataDir` is a directory where cache items on disk are stored. (For memory and disk caching).  This directory does not have to exist, however the process should have permissions to create it.  For first time usage, this directory should be empty.
+* `true` in `super(cacheName, cacheSize, true, dataDir);` tells the cache that to use memory and disk caching
+
 ```java
 public class ExampleCache1 extends AbstractCacheService<ExampleObjectToCache>{   
     private final ExampleDao exampleDao;
