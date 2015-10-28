@@ -15,7 +15,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @author sathayeg
  * @param <T>
  */
-public abstract class AbstractCacheService<T> {
+public abstract class AbstractCacheService<T> implements DirLocate {
+    
+    private static final String KeyInternalGetFromDisk = "f";
+    private static final String KeyInternalGetCachedObj = "o";
 
     protected LRUCache<String, T> cache;
     private final ReentrantReadWriteLock lock;
@@ -45,26 +48,8 @@ public abstract class AbstractCacheService<T> {
         this.cacheSize = cacheSize;
         statsMap = new HashMap<String, Object>();
         this.persist = persistToFileSystem;
-        this.dataDir = dataDirectory.trim().replaceAll("/$", "");
-        if(this.persist){
-            loadFromDiskToMemory();
-        }
-    }
-    
-    private void loadFromDiskToMemory() throws Exception {
-        try{
-            File dir = new File(this.dataDir);
-            if(! dir.isDirectory()) throw new Exception(this.dataDir + " : is not a directory");
-            String[] keys = dir.list();
-            for(String key:keys){
-                try{
-                    internalPut(key, deserialize(key), false);
-                }catch(Exception e){}
-            }
-        }catch(Exception e){
-            throw e;
-        }
-    }
+        this.dataDir = dataDirectory.trim().replaceAll("/$", "");        
+    } 
 
     public abstract boolean isCacheItemValid(T o);
     
@@ -79,9 +64,16 @@ public abstract class AbstractCacheService<T> {
     public abstract T loadData(String key) throws Exception;
 
     public T get(String key) throws Exception {
-        T o = getOnly(key);
+        Map<String, Object> map = internalGetOnly(key);
+        boolean fromDisk = (Boolean) map.get(KeyInternalGetFromDisk);
+        T o = (T) map.get(KeyInternalGetCachedObj);
         if (isCacheItemValidInternal(o)) {
             statsHits.incrementAndGet();
+            //Lazy load deserilized objects into memory
+            if(fromDisk){
+                p("From disk is true, lazy load, for key: " + key);
+                internalPutOnly(key, o, false); //false because we don't want to re-serialize a deserialized object, this is to lazy load to memory
+            }
             return o;
         }
         return putWithLookup(key);
@@ -89,7 +81,7 @@ public abstract class AbstractCacheService<T> {
 
     public T putWithLookup(String key) throws Exception {
         lock.writeLock().lock();
-        T o = internalGet(key);
+        T o = ((T) internalGet(key).get(KeyInternalGetCachedObj));
         try {
             if (! isCacheItemValidInternal(o)) {
                 o = loadData(key);
@@ -111,12 +103,16 @@ public abstract class AbstractCacheService<T> {
     }
 
     public void putOnly(String key, T o) throws Exception {
+        internalPutOnly(key, o, true);
+    }
+    
+    private void internalPutOnly(String key, T o, boolean overridePersist) throws Exception {
         if (null == o) {
             throw new Exception("Key: " + key + " - Null values not allowed");
         }
         lock.writeLock().lock();
         try {
-            internalPut(key, o, true);
+            internalPut(key, o, overridePersist);
         } catch (Exception e) {
             throw e;
         } finally {
@@ -125,6 +121,10 @@ public abstract class AbstractCacheService<T> {
     }
 
     public T getOnly(String key) throws Exception {
+        return ((T) internalGetOnly(key).get(KeyInternalGetCachedObj));
+    }
+    
+    private Map<String, Object> internalGetOnly(String key) throws Exception {
         lock.readLock().lock();
         try {
             return internalGet(key);
@@ -135,15 +135,20 @@ public abstract class AbstractCacheService<T> {
         }
     }
     
-    private T internalGet(String key) throws Exception{        
+    private Map<String, Object> internalGet(String key) throws Exception{  
+        Map<String, Object> map = new HashMap<String, Object>();
         try{
             T t = cache.get(key);
             if(persist && (null == t)){
                 t = deserialize(key);
+                map.put(KeyInternalGetFromDisk, true);
                 p("internalGet: post deserialize: key: " + key);
+            }else{
+                map.put(KeyInternalGetFromDisk, false);
             }
             p("internalGet: t is null: " + (null == t));
-            return t;
+            map.put(KeyInternalGetCachedObj, t);
+            return map;
         }catch(Exception e){
             throw e;
         }
@@ -215,5 +220,11 @@ public abstract class AbstractCacheService<T> {
     static void p(Object o){
         //System.out.println(o);
     }
+
+    @Override
+    public String getDir(String parentDir, String key) throws Exception {
+        if(Utl.areBlank(parentDir, key)) throw new Exception("parentDir: " + parentDir + ", key: " + key + " : invalid");
+        return parentDir + "/" + key;
+     }
     
 } //end class
