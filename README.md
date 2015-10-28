@@ -20,7 +20,7 @@ In your cache, override the two methods `isCacheItemValid` and `loadData`: (You 
 In the constructor call,  
 * `cacheName` is the name of your cache and is shown in the `getStats` call.  
 * `cacheSize` is the total number of items your cache will store.  When you add more items in the the cache that are greater than `cacheSize`, older items are removed on an LRU (Least Recently Used) basis.  
-* `dataDir` is a directory where cache items on disk are stored. (For memory and disk caching).  This directory does not have to exist, however the process should have permissions to create it.  For first time usage, this directory should be empty.
+* `dataDir` is a directory where cache items on disk are stored. (For memory and disk caching).  Each cache you create should have its own data directory.  This directory does not have to exist, however the process should have permissions to create it.  For first time usage, this directory should be empty.
 * `true` in `super(cacheName, cacheSize, true, dataDir);` tells the cache that to use memory and disk caching
 
 ```java
@@ -70,29 +70,32 @@ public class ExampleCache1 extends AbstractCacheService<ExampleObjectToCache>{
 
 ## Use your cache:  
 ```java
-public static ExampleCache1 cache = new ExampleCache1("ExampleCache1", 10000);
+public static ExampleCache1 cache = new ExampleCache1("ExampleCache1", 10000); //memory only
+or
+public static ExampleCache1 cache =  new ExampleCache1("ExampleCache1", 50000, new ExampleDao(), "/my/datadir/exampleCache1"); //memory and disk
+
 ExampleMyObjectToCache myObject = cache.get("key");
 Map<String, Object> stats = cache.getStats()
 ```
 
 ## Other points:  
 * The cache key must be a string. 
+* When using memory and disk caching, your cached objects must implement Serializable.  For memory only caching your cached objects do not have to implement Serializable.
 * You cannot store null values in the cache. So if your `loadData(String key)` method returns a null object, the `public T get(String key)` call will throw an exception.  
-* The `com.sg.simple.lru.cache.CacheEntry` object is a utility wrapper object you can store your real object in.  It has a default timestamp for when the object is created.  ie: `public class ExampleCache extends AbstractCacheService<CacheEntry<YourObjectToCache>>`
+* The `com.lru.memory.disk.cache.CacheEntry` object is a utility wrapper object you can store your real object in.  It has a default timestamp for when the object is created.  ie: `public class ExampleCache extends AbstractCacheService<CacheEntry<YourObjectToCache>>`
 
 ## Install (Maven)
 * Download https://github.com/gaurangsathaye/JavaSimpleLRUCache/releases/download/1.0/JavaSimpleLRUCache-1.0.jar
 * From the directory you downloaded the jar, run the following command to do a local maven install:  
-  `mvn install:install-file -Dfile=JavaSimpleLRUCache-1.0.jar -DgroupId=com.sg.simple.lru.cache -DartifactId=JavaSimpleLRUCache -Dversion=1.0 -Dpackaging=jar`
+  `mvn install:install-file -Dfile=JavaLRUMemoryDiskCache-1.0.jar -DgroupId=com.lru.memory.disk.cache -DartifactId=JavaLRUMemoryDiskCache -Dversion=1.0 -Dpackaging=jar`
 * Add to `<dependencies>`  
 ```xml
 <dependency>
-    <groupId>com.sg.simple.lru.cache</groupId>
-    <artifactId>JavaSimpleLRUCache</artifactId>
+    <groupId>com.lru.memory.disk.cache</groupId>
+    <artifactId>JavaLRUMemoryDiskCache</artifactId>
     <version>1.0</version>
 </dependency>
 ```
 
 ## To do:
-* Persist cache on file system.
 * Asynch load cache item if invalid and return cached entry immediately.
