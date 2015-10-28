@@ -1,6 +1,6 @@
-package com.example.sg.simple.lru;
+package com.example.lru.memory.disk.cache;
 
-import com.sg.simple.lru.cache.AbstractCacheService;
+import com.lru.memory.disk.cache.AbstractCacheService;
 
 /**
  *

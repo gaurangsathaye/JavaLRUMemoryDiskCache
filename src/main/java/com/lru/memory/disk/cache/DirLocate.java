@@ -1,4 +1,4 @@
-package com.sg.simple.lru.cache;
+package com.lru.memory.disk.cache;
 
 /**
  *

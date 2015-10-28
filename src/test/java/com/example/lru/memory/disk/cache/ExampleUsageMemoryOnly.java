@@ -1,4 +1,4 @@
-package com.example.sg.simple.lru;
+package com.example.lru.memory.disk.cache;
 
 import java.util.Random;
 
@@ -28,12 +28,17 @@ public class ExampleUsageMemoryOnly {
      */
     static void runExample() throws Exception {
         for(int i=0;i<1000;i++) {
-            cache.get(Integer.toString(new Random().nextInt(200)));
-            p(cache.getStats());
+            ExampleObjectToCache cachedObject = cache.get(Integer.toString(new Random().nextInt(200)));
+            doSomethingWithCachedObject(cachedObject);
         }
+        p(cache.getStats());
     }
 
     static void p(Object o) {
         System.out.println(o);
+    }
+
+    private static void doSomethingWithCachedObject(ExampleObjectToCache cachedObject) {
+        //do something with your returned cached object
     }
 }

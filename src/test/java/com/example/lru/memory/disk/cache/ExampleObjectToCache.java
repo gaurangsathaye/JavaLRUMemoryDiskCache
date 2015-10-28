@@ -1,4 +1,4 @@
-package com.example.sg.simple.lru;
+package com.example.lru.memory.disk.cache;
 
 import java.io.FileOutputStream;
 import java.io.ObjectOutputStream;

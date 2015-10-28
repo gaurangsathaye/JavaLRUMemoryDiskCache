@@ -1,8 +1,7 @@
-package com.example.sg.simple.lru;
+package com.example.lru.memory.disk.cache;
 
 import java.io.File;
 import java.util.Map;
-import java.util.Random;
 
 /**
  *
