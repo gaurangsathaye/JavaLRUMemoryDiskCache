@@ -6,14 +6,15 @@ import java.util.Random;
  *
  * @author sathayeg
  */
-public class Example1 {
+public class ExamplePersist1 {
+    private static final String dataDirectory ="/Users/sathayeg/projects/0github/JavaSimpleLRUCache/datadir";
     
     public static ExampleCache1 cache;
 
     public static void main(String[] args) {
         try {
             //For example, create cache that can be accessed by all parts of your code.
-            cache = new ExampleCache1("ExampleCache1", 10000, new ExampleDao(), false, null);
+            cache = new ExampleCache1("ExampleCache1", 10000, new ExampleDao(), true, dataDirectory);
             
             //Use the cache
             runExample();
@@ -27,8 +28,10 @@ public class Example1 {
      Create the cache with the cache name and the number of items you want to keep in the cache.
      */
     static void runExample() throws Exception {
-        for(int i=0;i<1000;i++) {
-            cache.get(Integer.toString(new Random().nextInt(200)));
+        for(int i=0;i<1;i++) {
+            p("start cache.get");
+            cache.get(Integer.toString(i));
+            p("done cache.get");
             p(cache.getStats());
         }
     }

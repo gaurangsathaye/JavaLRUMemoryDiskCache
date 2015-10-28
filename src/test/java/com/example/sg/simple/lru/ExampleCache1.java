@@ -6,11 +6,11 @@ import com.sg.simple.lru.cache.AbstractCacheService;
  *
  * @author sathayeg
  */
-public class ExampleCache1 extends AbstractCacheService<ExampleMyObjectToCache>{
+public class ExampleCache1 extends AbstractCacheService<ExampleMyObjectToCache>{   
     private final ExampleDao exampleDao;
 
-    public ExampleCache1(String cacheName, int cacheSize, ExampleDao exampleDao) {
-        super(cacheName, cacheSize);
+    public ExampleCache1(String cacheName, int cacheSize, ExampleDao exampleDao, boolean persist, String dataDir) throws Exception {
+        super(cacheName, cacheSize, persist, dataDir);
         this.exampleDao = exampleDao;
     }
 
