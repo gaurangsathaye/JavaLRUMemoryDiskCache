@@ -1,13 +1,11 @@
 package com.example.sg.simple.lru;
 
-import java.util.Random;
-
 /**
  *
  * @author sathayeg
  */
-public class ExamplePersist1 {
-    private static final String dataDirectory ="/Users/sathayeg/projects/0github/JavaSimpleLRUCache/datadir";
+public class ExampleUsageMemoryAndDisk {
+    private static final String dataDirectory ="./datadir";
     
     public static ExampleCache1 cache;
 

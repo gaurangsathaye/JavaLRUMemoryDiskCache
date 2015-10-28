@@ -6,14 +6,14 @@ import java.util.Random;
  *
  * @author sathayeg
  */
-public class Example1 {
+public class ExampleUsageMemoryOnly {
     
     public static ExampleCache1 cache;
 
     public static void main(String[] args) {
         try {
-            //For example, create cache that can be accessed by all parts of your code.
-            cache = new ExampleCache1("ExampleCache1", 10000, new ExampleDao(), false, null);
+            //Create cache that can be accessed by all parts of your code.
+            cache = new ExampleCache1("ExampleCache1", 10000, new ExampleDao());
             
             //Use the cache
             runExample();

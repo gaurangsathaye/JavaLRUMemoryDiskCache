@@ -61,9 +61,7 @@ public abstract class AbstractCacheService<T> {
     public abstract T loadData(String key) throws Exception;
 
     public T get(String key) throws Exception {
-        p("start get");
         T o = getOnly(key);
-        p("done getOnly");
         if (isCacheItemValidInternal(o)) {
             statsHits.incrementAndGet();
             return o;
@@ -142,8 +140,7 @@ public abstract class AbstractCacheService<T> {
         }
     }
     
-    private void serialize(String key, T t) throws Exception{
-        p("start serialize: " + key);
+    private void serialize(String key, T t) throws LruCacheSerializationException{
         FileOutputStream fos = null;
         ObjectOutputStream oos = null;
         try{
@@ -151,8 +148,7 @@ public abstract class AbstractCacheService<T> {
             oos = new ObjectOutputStream(fos);
             oos.writeObject(t);
         }catch(Exception e){
-            p("error serialize" + e);
-            throw e;
+            throw new LruCacheSerializationException("Unable to serialize key: " + key, e);
         }finally{
             try{fos.close();}catch(Exception e){}
             try{oos.close();}catch(Exception e){}
@@ -160,7 +156,6 @@ public abstract class AbstractCacheService<T> {
     }
     
     private T deserialize(String key) throws Exception{
-        p("start deserialize: " + key);
         File f = new File(this.dataDir + "/" + key);
         if(! f.exists()) return null;
         FileInputStream fis = null;
@@ -170,11 +165,16 @@ public abstract class AbstractCacheService<T> {
             ois = new ObjectInputStream(fis);
             return ( (T) ois.readObject() );
         }catch(Exception e){
-            throw e;
+            //Don't throw any errors here, delete the existing file
+            //This may have been due to deserialization incompatibilities from cached item code changes, etc.
+            try{
+                f.delete();
+            }catch(Exception exd){}
         }finally{
             try{fis.close();}catch(Exception e){}
             try{ois.close();}catch(Exception e){}
         }
+        return null;
     }
 
     public final Map<String, Object> getStats() {
@@ -192,8 +192,4 @@ public abstract class AbstractCacheService<T> {
         return statsMap;
     }
     
-    static void p(Object o){
-        System.out.println(o);
-    }
-
 } //end class
