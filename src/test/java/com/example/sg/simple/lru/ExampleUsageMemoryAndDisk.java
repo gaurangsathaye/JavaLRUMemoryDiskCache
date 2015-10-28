@@ -9,19 +9,27 @@ import java.util.Random;
  * @author sathayeg
  */
 public class ExampleUsageMemoryAndDisk {
-    private static final String dataDirectory ="./datadir";
-    
+
+    private static final String dataDirectory = "./datadir";
+
     public static ExampleCache1 cache;
 
     public static void main(String[] args) {
         try {
+            File datadir = new File(dataDirectory);
+            if (datadir.exists()) {
+                p("Warning: First delete the data directory: " + dataDirectory + ", for this test !!!");
+                p("The cache will create it if it does not exist");
+                return;
+            }
+
             //For example, create cache that can be accessed by all parts of your code.
             cache = new ExampleCache1("ExampleCache1", 10, new ExampleDao(), dataDirectory);
-            
+
             //Use the cache
             runExample();
         } catch (Exception e) {
-            p("Error: " + e);
+            p("Error: " + e + " ::: cause: " + e.getCause().toString());
         }
     }
 
@@ -29,52 +37,40 @@ public class ExampleUsageMemoryAndDisk {
      Create the cache with the cache name and the number of items you want to keep in the cache.
      */
     static void runExample() throws Exception {
-        clearDataDirectoryForTesting();        
         String key = "testKey";
-        
+
         p("Nothing on disk and memory at this call, key object retrieved from 'loadData' call");
-        cache.get(key);    
+        cache.get(key);
         printHitMissStats(cache.getStats());
         p(" --- \n");
-        
+
         p("Key object retrieved from memory");
         cache.get(key);
         printHitMissStats(cache.getStats());
         p(" --- \n");
-        
+
         p("Clear cache to simulate your process shutting down");
         p("Key object is on disk only, not in memory");
         cache.clear();
         p(" --- \n");
-        
+
         p("Key object retrieved from disk");
         cache.get(key);
         printHitMissStats(cache.getStats());
         p(" --- \n");
-        
+
         p("Key object retrieved from memory");
         cache.get(key);
         printHitMissStats(cache.getStats());
-        p(" --- \n");        
+        p(" --- \n");
     }
-    
+
     static void printHitMissStats(Map<String, Object> map) throws Exception {
         long totalHits = (Long) map.get("hits");
         long hitsDisk = (Long) map.get("hitsDisk");
         long hitsMemory = (Long) map.get("hitsMemory");
         long misses = (Long) map.get("misses");
         p("totalHits: " + totalHits + ", hitsDisk: " + hitsDisk + ", hitsMemory: " + hitsMemory + ", misses: " + misses);
-    }
-    
-    static void clearDataDirectoryForTesting() throws Exception {
-        File dir = new File(dataDirectory);
-        if(dir.exists() && dir.isFile()) throw new Exception("dataDirectory is a file, it should be a directory");
-        if(dir.exists()){
-            File[] listFiles = dir.listFiles();
-            for(File f:listFiles){
-                f.delete();
-            }
-        }
     }
 
     static void p(Object o) {

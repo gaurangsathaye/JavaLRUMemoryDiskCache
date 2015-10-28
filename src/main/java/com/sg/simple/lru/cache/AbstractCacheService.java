@@ -19,6 +19,7 @@ public abstract class AbstractCacheService<T> implements DirLocate {
     
     private static final String KeyInternalGetFromDisk = "f";
     private static final String KeyInternalGetCachedObj = "o";
+    private static final int NumberDiskShards = 1000;
 
     protected LRUCache<String, T> cache;
     private final ReentrantReadWriteLock lock;
@@ -59,6 +60,10 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         if(dir.exists() && dir.isFile()) throw new Exception("data dir: " + this.dataDir + ", is a file, should be a directory");
         if(! dir.exists()){
             dir.mkdirs();
+        }
+        
+        for(int i=0;i < NumberDiskShards;i++){
+            new File(dir, Integer.toString(i)).mkdir();
         }
     }
 
@@ -251,7 +256,7 @@ public abstract class AbstractCacheService<T> implements DirLocate {
     @Override
     public String getPathToFile(String key) throws Exception {
         if(Utl.areBlank(key)) throw new Exception("key: " + key + " : invalid");
-        return this.dataDir + "/" + key;
+        return this.dataDir + "/" + (Math.abs(key.hashCode()) % NumberDiskShards) + "/" + key;
      }
     
 } //end class
