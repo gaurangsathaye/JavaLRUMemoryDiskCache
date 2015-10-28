@@ -35,5 +35,9 @@ public class LRUCache<K extends String, V> extends LinkedHashMap<K, V> {
             new File(dataDir + "/" + eldest.getKey()).delete();
         }catch(Exception e){}
     }
+    
+    static void p(Object o){
+        System.out.println(o);
+    }
 
 }

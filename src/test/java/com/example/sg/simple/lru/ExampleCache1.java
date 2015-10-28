@@ -6,7 +6,7 @@ import com.sg.simple.lru.cache.AbstractCacheService;
  *
  * @author sathayeg
  */
-public class ExampleCache1 extends AbstractCacheService<ExampleMyObjectToCache>{   
+public class ExampleCache1 extends AbstractCacheService<ExampleObjectToCache>{   
     private final ExampleDao exampleDao;
     
     //Example of constructor that creates an in memory cache only
@@ -33,8 +33,10 @@ public class ExampleCache1 extends AbstractCacheService<ExampleMyObjectToCache>{
         If you return false here, your cached object will be reloaded using your 'loadData' method.
     */
     @Override
-    public boolean isCacheItemValid(ExampleMyObjectToCache o) {
-        return o.isValid();
+    public boolean isCacheItemValid(ExampleObjectToCache o) {
+        //return o.isValid();
+        
+        return (null != o);
     }
 
     /*
@@ -42,7 +44,7 @@ public class ExampleCache1 extends AbstractCacheService<ExampleMyObjectToCache>{
         This could be an api call, database call, etc.
     */
     @Override
-    public ExampleMyObjectToCache loadData(String key) throws Exception {
+    public ExampleObjectToCache loadData(String key) throws Exception {
         return this.exampleDao.get(key);
     }
     

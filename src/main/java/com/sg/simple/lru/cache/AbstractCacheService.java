@@ -46,6 +46,24 @@ public abstract class AbstractCacheService<T> {
         statsMap = new HashMap<String, Object>();
         this.persist = persistToFileSystem;
         this.dataDir = dataDirectory.trim().replaceAll("/$", "");
+        if(this.persist){
+            loadFromDiskToMemory();
+        }
+    }
+    
+    private void loadFromDiskToMemory() throws Exception {
+        try{
+            File dir = new File(this.dataDir);
+            if(! dir.isDirectory()) throw new Exception(this.dataDir + " : is not a directory");
+            String[] keys = dir.list();
+            for(String key:keys){
+                try{
+                    internalPut(key, deserialize(key), false);
+                }catch(Exception e){}
+            }
+        }catch(Exception e){
+            throw e;
+        }
     }
 
     public abstract boolean isCacheItemValid(T o);
@@ -78,7 +96,7 @@ public abstract class AbstractCacheService<T> {
                 if (null == o) {
                     throw new Exception("Key: " + key + " - Null values not allowed");
                 }
-                internalPut(key, o);
+                internalPut(key, o, true);
                 statsMisses.incrementAndGet();
             } else {
                 statsHits.incrementAndGet();
@@ -98,7 +116,7 @@ public abstract class AbstractCacheService<T> {
         }
         lock.writeLock().lock();
         try {
-            internalPut(key, o);
+            internalPut(key, o, true);
         } catch (Exception e) {
             throw e;
         } finally {
@@ -121,19 +139,21 @@ public abstract class AbstractCacheService<T> {
         try{
             T t = cache.get(key);
             if(persist && (null == t)){
-                t = deserialize(key);              
+                t = deserialize(key);
+                p("internalGet: post deserialize: key: " + key);
             }
+            p("internalGet: t is null: " + (null == t));
             return t;
         }catch(Exception e){
             throw e;
         }
     }
     
-    private void internalPut(String key, T t) throws Exception{        
+    private void internalPut(String key, T t, boolean overridePersist) throws Exception{        
         try{
             cache.put(key, t);
-            if(persist){
-                serialize(key, t);              
+            if(persist && overridePersist){
+                serialize(key, t);            
             }
         }catch(Exception e){
             throw e;
@@ -190,6 +210,10 @@ public abstract class AbstractCacheService<T> {
         statsMap.put("cacheMaxSize", cacheSize);
         statsMap.put("cacheCurrentSize", cache.size());
         return statsMap;
+    }
+    
+    static void p(Object o){
+        //System.out.println(o);
     }
     
 } //end class

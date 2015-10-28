@@ -8,14 +8,14 @@ import java.io.Serializable;
  *
  * @author sathayeg
  */
-public class ExampleMyObjectToCache implements Serializable{
+public class ExampleObjectToCache implements Serializable{
     private static final long serialVersionUID = 1L;
     
     private long lastModfied = 0;
     private String data;
     private final String id;
     
-    public ExampleMyObjectToCache(String id){
+    public ExampleObjectToCache(String id){
         this.id = id;
     }
     
@@ -51,7 +51,7 @@ public class ExampleMyObjectToCache implements Serializable{
     }
     
     public static void main(String[] args){
-        ExampleMyObjectToCache obj = new ExampleDao().get("test2");
+        ExampleObjectToCache obj = new ExampleDao().get("test2");
         FileOutputStream fos = null;
         ObjectOutputStream oos = null;
         try{
