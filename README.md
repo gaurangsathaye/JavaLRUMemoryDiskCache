@@ -9,7 +9,9 @@ Some of the benefits of using the cache are...
 * Memory and disk storage: Cache is persisted to memory and disk. In case you restart your process, the cache will be lazy loaded from disk.
 * `public final Map<String, Object> getStats()` - Get stats for your cache like hit ratio, cache size, hits, misses, etc.
 
-**See the `com.example.lru.memory.disk.cache` package (in src/test) for an example and details on how to create and use the cache.)**
+**See the `com.example.lru.memory.disk.cache` package (in src/test) for an example and details on how to create and use the cache.)**  
+* `com.example.lru.memory.disk.cache.ExampleUsageMemoryOnly` : Example of how to use memory only cache.
+* `com.example.lru.memory.disk.cache.ExampleUsageMemoryAndDisk` : Example of how to use memory and disk cache.
 
 ## Create your cache:  
 
