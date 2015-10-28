@@ -63,7 +63,12 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         }
         
         for(int i=0;i < NumberDiskShards;i++){
-            new File(dir, Integer.toString(i)).mkdir();
+            File shardDir = new File(dir, Integer.toString(i));
+            if(shardDir.exists() && shardDir.isDirectory()) continue;
+            if(shardDir.exists() && (! shardDir.isDirectory())){
+                shardDir.delete();         
+            }
+            shardDir.mkdir();
         }
     }
 
