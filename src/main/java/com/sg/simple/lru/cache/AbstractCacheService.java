@@ -91,7 +91,7 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         T o = (T) map.get(KeyInternalGetCachedObj);
         //p("Key: " + key + ", try from disk: " + fromDisk + ", obj from internalGetOnly: " + (null != o));
         if (isCacheItemValidInternal(o)) {            
-            //Lazy load deserilized objects into memory
+            //Lazy load disk objects into memory
             if(fromDisk){                
                 internalPutOnly(key, o, false); //false because we don't want to re-serialize a deserialized object, this is to lazy load to memory
             }
