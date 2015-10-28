@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.sg.simple.lru.cache;
 
 /**
@@ -10,5 +5,19 @@ package com.sg.simple.lru.cache;
  * @author sathayeg
  */
 public class Utl {
-    
+    public static boolean areBlank(String... strs) {
+        try {
+            if ((null == strs) || (strs.length < 1)) {
+                return true;
+            }
+            for (String s : strs) {
+                if ((null == s) || s.trim().equals("")) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            return true;
+        }
+        return false;
+    }
 }

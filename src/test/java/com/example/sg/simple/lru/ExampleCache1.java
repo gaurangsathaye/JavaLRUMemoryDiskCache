@@ -16,8 +16,8 @@ public class ExampleCache1 extends AbstractCacheService<ExampleObjectToCache>{
     }
     
     //Example of constructor that creates an in memory and disk cache
-    public ExampleCache1(String cacheName, int cacheSize, ExampleDao exampleDao, boolean persist, String dataDir) throws Exception {
-        super(cacheName, cacheSize, persist, dataDir);
+    public ExampleCache1(String cacheName, int cacheSize, ExampleDao exampleDao, String dataDir) throws Exception {
+        super(cacheName, cacheSize, true, dataDir);
         this.exampleDao = exampleDao;
     }
 
@@ -34,8 +34,7 @@ public class ExampleCache1 extends AbstractCacheService<ExampleObjectToCache>{
     */
     @Override
     public boolean isCacheItemValid(ExampleObjectToCache o) {
-        //return o.isValid();
-        
+        //return o.isValid();        
         return (null != o);
     }
 

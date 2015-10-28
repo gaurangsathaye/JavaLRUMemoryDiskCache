@@ -25,7 +25,8 @@ public abstract class AbstractCacheService<T> implements DirLocate {
 
     private final AtomicLong statsMisses;
     private final AtomicLong statsHits;
-    private final AtomicLong statsErr;
+    private final AtomicLong statsHitsDisk;
+    private final AtomicLong statsHitsMemory;
     private final String cacheName;
     private final int cacheSize;
     private final Map<String, Object> statsMap;
@@ -39,17 +40,27 @@ public abstract class AbstractCacheService<T> implements DirLocate {
     public AbstractCacheService(String cacheName, int cacheSize, boolean persistToFileSystem, String dataDirectory) throws Exception{
         if((null == cacheName) || cacheName.trim().equals("") || cacheSize < 1) throw new Exception("cacheName and/or cacheSize invalid");
         if(persistToFileSystem && ((null == dataDirectory) || dataDirectory.trim().equals("")) ) throw new Exception("Invalid data directory");
-        this.cacheName = cacheName.trim();
-        this.cache = new LRUCache<String, T>(cacheSize, dataDirectory);
+        this.cacheName = cacheName.trim();        
         this.lock = new ReentrantReadWriteLock();
         this.statsHits = new AtomicLong(0L);
+        this.statsHitsDisk = new AtomicLong(0L);
+        this.statsHitsMemory = new AtomicLong(0L);
         this.statsMisses = new AtomicLong(0L);
-        this.statsErr = new AtomicLong(0L);
         this.cacheSize = cacheSize;
         statsMap = new HashMap<String, Object>();
         this.persist = persistToFileSystem;
-        this.dataDir = dataDirectory.trim().replaceAll("/$", "");        
-    } 
+        this.dataDir = dataDirectory.trim().replaceAll("/$", "");
+        this.cache = new LRUCache<String, T>(cacheSize, this);
+        init();
+    }
+    
+    private void init() throws Exception {
+        File dir = new File(this.dataDir);
+        if(dir.exists() && dir.isFile()) throw new Exception("data dir: " + this.dataDir + ", is a file, should be a directory");
+        if(! dir.exists()){
+            dir.mkdirs();
+        }
+    }
 
     public abstract boolean isCacheItemValid(T o);
     
@@ -64,14 +75,14 @@ public abstract class AbstractCacheService<T> implements DirLocate {
     public abstract T loadData(String key) throws Exception;
 
     public T get(String key) throws Exception {
+        if(Utl.areBlank(key)) throw new Exception("key is blank");
         Map<String, Object> map = internalGetOnly(key);
         boolean fromDisk = (Boolean) map.get(KeyInternalGetFromDisk);
         T o = (T) map.get(KeyInternalGetCachedObj);
-        if (isCacheItemValidInternal(o)) {
-            statsHits.incrementAndGet();
+        //p("Key: " + key + ", try from disk: " + fromDisk + ", obj from internalGetOnly: " + (null != o));
+        if (isCacheItemValidInternal(o)) {            
             //Lazy load deserilized objects into memory
-            if(fromDisk){
-                p("From disk is true, lazy load, for key: " + key);
+            if(fromDisk){                
                 internalPutOnly(key, o, false); //false because we don't want to re-serialize a deserialized object, this is to lazy load to memory
             }
             return o;
@@ -89,13 +100,9 @@ public abstract class AbstractCacheService<T> implements DirLocate {
                     throw new Exception("Key: " + key + " - Null values not allowed");
                 }
                 internalPut(key, o, true);
-                statsMisses.incrementAndGet();
-            } else {
-                statsHits.incrementAndGet();
             }
             return o;
         } catch (Exception e) {
-            statsErr.incrementAndGet();
             throw e;
         } finally {
             lock.writeLock().unlock();
@@ -127,7 +134,17 @@ public abstract class AbstractCacheService<T> implements DirLocate {
     private Map<String, Object> internalGetOnly(String key) throws Exception {
         lock.readLock().lock();
         try {
-            return internalGet(key);
+            Map<String, Object> map = internalGet(key);
+            boolean tryDisk = (Boolean) map.get(KeyInternalGetFromDisk);
+            T t = (T) map.get(KeyInternalGetCachedObj);
+            if(null != t){
+                statsHits.incrementAndGet();
+                if(tryDisk) statsHitsDisk.incrementAndGet();
+                else statsHitsMemory.incrementAndGet();
+            }else{
+                statsMisses.incrementAndGet();
+            }
+            return map;
         } catch (Exception e) {
             throw e;
         } finally {
@@ -141,13 +158,11 @@ public abstract class AbstractCacheService<T> implements DirLocate {
             T t = cache.get(key);
             if(persist && (null == t)){
                 t = deserialize(key);
-                map.put(KeyInternalGetFromDisk, true);
-                p("internalGet: post deserialize: key: " + key);
+                map.put(KeyInternalGetFromDisk, true);                
             }else{
                 map.put(KeyInternalGetFromDisk, false);
             }
-            p("internalGet: t is null: " + (null == t));
-            map.put(KeyInternalGetCachedObj, t);
+            map.put(KeyInternalGetCachedObj, t);            
             return map;
         }catch(Exception e){
             throw e;
@@ -169,7 +184,7 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         FileOutputStream fos = null;
         ObjectOutputStream oos = null;
         try{
-            fos = new FileOutputStream(this.dataDir + "/" + key, false);
+            fos = new FileOutputStream(this.getPathToFile(key), false);
             oos = new ObjectOutputStream(fos);
             oos.writeObject(t);
         }catch(Exception e){
@@ -181,7 +196,7 @@ public abstract class AbstractCacheService<T> implements DirLocate {
     }
     
     private T deserialize(String key) throws Exception{
-        File f = new File(this.dataDir + "/" + key);
+        File f = new File(this.getPathToFile(key));
         if(! f.exists()) return null;
         FileInputStream fis = null;
         ObjectInputStream ois = null;
@@ -207,8 +222,9 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         long misses = statsMisses.get();
         statsMap.put("cacheName", cacheName);
         statsMap.put("hits", hits);
+        statsMap.put("hitsDisk", statsHitsDisk.get());
+        statsMap.put("hitsMemory", statsHitsMemory.get());
         statsMap.put("misses", misses);
-        statsMap.put("err", statsErr.get());
         statsMap.put("hitratio",
                 (hits < 1) ? 0.0 : (((double) hits) / ((double) (hits + misses)))
         );
@@ -217,14 +233,25 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         return statsMap;
     }
     
-    static void p(Object o){
-        //System.out.println(o);
+    public void clear() throws Exception {        
+        lock.writeLock().lock();
+        try {
+            cache.clear();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
+    
+    /*static void p(Object o){
+        System.out.println(o);
+    }*/
 
     @Override
-    public String getDir(String parentDir, String key) throws Exception {
-        if(Utl.areBlank(parentDir, key)) throw new Exception("parentDir: " + parentDir + ", key: " + key + " : invalid");
-        return parentDir + "/" + key;
+    public String getPathToFile(String key) throws Exception {
+        if(Utl.areBlank(key)) throw new Exception("key: " + key + " : invalid");
+        return this.dataDir + "/" + key;
      }
     
 } //end class
