@@ -37,13 +37,7 @@ public class LRUCache<K extends String, V> extends LinkedHashMap<K, V> {
             File f = new File(this.dirLocate.getPathToFile(eldest.getKey()));
             if(f.exists() && (! f.isDirectory())){
                 f.delete();
-                p("lru cache: deleted: " + f.getAbsolutePath());
             }
         }catch(Exception e){}
     }
-    
-    static void p(Object o){
-        System.out.println(o);
-    }
-
 }
