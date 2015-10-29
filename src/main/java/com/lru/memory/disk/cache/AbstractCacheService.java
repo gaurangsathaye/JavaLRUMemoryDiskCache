@@ -257,11 +257,20 @@ public abstract class AbstractCacheService<T> implements DirLocate {
     /*static void p(Object o){
         System.out.println(o);
     }*/
-
+    
+    //Start DirLocate impl
     @Override
     public String getPathToFile(String key) throws Exception {
         if(Utl.areBlank(key)) throw new Exception("key: " + key + " : invalid");
         return this.dataDir + "/" + (Math.abs(key.hashCode()) % NumberDiskShards) + "/" + Utl.sha256(key);
      }
+    
+    
+    //End DirLocate impl
+
+    @Override
+    public boolean isDiskPersistent() {
+        return this.persist;
+    }
     
 } //end class

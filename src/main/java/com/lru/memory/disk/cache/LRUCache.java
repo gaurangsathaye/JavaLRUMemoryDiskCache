@@ -26,7 +26,7 @@ public class LRUCache<K extends String, V> extends LinkedHashMap<K, V> {
     @Override
     protected boolean removeEldestEntry(Entry<K, V> eldest) {        
         if(this.size() > this.cachesize){
-            deleteFromFilesystem(eldest);
+            if(this.dirLocate.isDiskPersistent()) deleteFromFilesystem(eldest);
             return true;
         }        
         return false;
