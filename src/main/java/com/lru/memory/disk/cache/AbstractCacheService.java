@@ -52,7 +52,7 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         this.persist = persistToFileSystem;
         this.dataDir = dataDirectory.trim().replaceAll("/$", "");
         this.cache = new LRUCache<>(cacheSize, this);
-        init();
+        if(this.persist) init();
     }
     
     private void init() throws Exception {
