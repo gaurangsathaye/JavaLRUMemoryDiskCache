@@ -17,7 +17,7 @@ Some of the benefits of using the cache are...
 
 Override the two methods `isCacheItemValid` and `loadData`: (You do not call the `isCacheItemValid` and `loadData` methods directly.  You just need to define them, and they will be called by the internal cache as needed.  
 
-In ExampleCache1 constructor call,  
+In `com.example.lru.memory.disk.cache.ExampleCache` constructor call,  
 * `cacheName` is the name of your cache and is shown in the `getStats` call.  
 * `cacheSize` is the total number of items your cache will store.  When you add more items in the the cache that are greater than `cacheSize`, older items are removed on an LRU (Least Recently Used) basis.  
 * `diskPersist` (only for memory AND disk cache) tells the cache to use memory AND disk caching
@@ -71,9 +71,9 @@ public class ExampleCache extends AbstractCacheService<ExampleObjectToCache>{
 
 ## Use your cache:  
 ```java
-public static ExampleCache1 cacheMemoryOnly = new ExampleCache1("ExampleCache1", 10000, new ExampleDao()); //memory only
+public static ExampleCache cacheMemoryOnly = new ExampleCache("ExampleCacheMem", 10000, new ExampleDao()); //memory only
 or
-public static ExampleCache1 cacheMemoryAndDisk =  new ExampleCache1("ExampleCache1", 10, true, "/data/directory/forMyObject", new ExampleDao()); //memory and disk
+public static ExampleCache cacheMemoryAndDisk =  new ExampleCache("ExampleCacheMemDisk", 10, true, "/data/directory/forMyObject", new ExampleDao()); //memory and disk
 
 ExampleMyObjectToCache myObject = cacheMemoryAndDisk.get("key");
 Map<String, Object> stats = cacheMemoryAndDisk.getStats()
