@@ -71,9 +71,9 @@ public class ExampleCache1 extends AbstractCacheService<ExampleObjectToCache>{
 
 ## Use your cache:  
 ```java
-public static ExampleCache1 cache = new ExampleCache1("ExampleCache1", 10000); //memory only
+public static ExampleCache1 cacheMemoryOnly = new ExampleCache1("ExampleCache1", 10000, new ExampleDao()); //memory only
 or
-public static ExampleCache1 cache =  new ExampleCache1("ExampleCache1", 50000, new ExampleDao(), "/my/datadir/exampleCache1"); //memory and disk
+public static ExampleCache1 cacheMemoryAndDisk =  new ExampleCache1("ExampleCache1", 10, true, "/data/directory/forMyObject", new ExampleDao()); //memory and disk
 
 ExampleMyObjectToCache myObject = cache.get("key");
 Map<String, Object> stats = cache.getStats()
