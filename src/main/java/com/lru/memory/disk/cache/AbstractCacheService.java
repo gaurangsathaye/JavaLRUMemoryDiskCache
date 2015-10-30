@@ -38,9 +38,9 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         this(cacheName, cacheSize, false, null);
     }
     
-    public AbstractCacheService(String cacheName, int cacheSize, boolean persistToFileSystem, String dataDirectory) throws Exception{
-        if((null == cacheName) || cacheName.trim().equals("") || cacheSize < 1) throw new Exception("cacheName and/or cacheSize invalid");
-        if(persistToFileSystem && ((null == dataDirectory) || dataDirectory.trim().equals("")) ) throw new Exception("Invalid data directory");
+    public AbstractCacheService(String cacheName, int cacheSize, boolean diskPersist, String dataDirectory) throws Exception{
+        if(Utl.areBlank(cacheName) || cacheSize < 1) throw new Exception("cacheName and/or cacheSize invalid");
+        if(diskPersist && Utl.areBlank(dataDirectory) ) throw new Exception("Invalid data directory");
         this.cacheName = cacheName.trim();        
         this.lock = new ReentrantReadWriteLock();
         this.statsHits = new AtomicLong(0L);
@@ -48,11 +48,13 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         this.statsHitsMemory = new AtomicLong(0L);
         this.statsMisses = new AtomicLong(0L);
         this.cacheSize = cacheSize;
-        statsMap = new HashMap<>();
-        this.persist = persistToFileSystem;
-        this.dataDir = dataDirectory.trim().replaceAll("/$", "");
+        this.statsMap = new HashMap<>();
+        this.persist = diskPersist;        
         this.cache = new LRUCache<>(cacheSize, this);
-        if(this.persist) init();
+        if(this.persist) {
+            this.dataDir = dataDirectory.trim().replaceAll("/$", "");
+            init();
+        }
     }
     
     private void init() throws Exception {
@@ -216,7 +218,7 @@ public abstract class AbstractCacheService<T> implements DirLocate {
             return ( (T) ois.readObject() );
         }catch(Exception e){
             //Don't throw any errors here, delete the existing file
-            //This may have been due to deserialization incompatibilities from cached item code changes, etc.
+            //This may have been due to deserialization incompatibilities from serial version uid or cached item code changes, etc.
             try{
                 f.delete();
             }catch(Exception exd){}
@@ -261,6 +263,7 @@ public abstract class AbstractCacheService<T> implements DirLocate {
     //Start DirLocate impl
     @Override
     public String getPathToFile(String key) throws Exception {
+        if(! isDiskPersistent()) return null;
         if(Utl.areBlank(key)) throw new Exception("key: " + key + " : invalid");
         return this.dataDir + "/" + (Math.abs(key.hashCode()) % NumberDiskShards) + "/" + Utl.sha256(key);
      }

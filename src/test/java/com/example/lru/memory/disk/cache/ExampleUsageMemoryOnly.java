@@ -8,12 +8,13 @@ import java.util.Random;
  */
 public class ExampleUsageMemoryOnly {
     
-    public static ExampleCache1 cache;
+    public static ExampleCache cache;
 
     public static void main(String[] args) {
         try {
             //Create cache that can be accessed by all parts of your code.
-            cache = new ExampleCache1("ExampleCache1", 10000, new ExampleDao());
+            cache = new ExampleCache("ExampleCache1", 10000, new ExampleDao());
+            p("created cache");
             
             //Use the cache
             runExample();

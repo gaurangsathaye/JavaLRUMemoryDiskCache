@@ -17,12 +17,12 @@ public class ExampleUsageMemoryAndDisk2 {
 
     private static final String dataDirectory = "./datadir";
 
-    public static ExampleCache1 cache;
+    public static ExampleCache cache;
 
     public static void main(String[] args) {
         try {
             //For example, create cache that can be accessed by all parts of your code.
-            cache = new ExampleCache1("ExampleCache1", 50000, new ExampleDao(), dataDirectory);
+            cache = new ExampleCache("ExampleCache1", 50000, true, dataDirectory, new ExampleDao());
 
             //Use the cache
             runExample();

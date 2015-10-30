@@ -6,18 +6,18 @@ import com.lru.memory.disk.cache.AbstractCacheService;
  *
  * @author sathayeg
  */
-public class ExampleCache1 extends AbstractCacheService<ExampleObjectToCache>{   
+public class ExampleCache extends AbstractCacheService<ExampleObjectToCache>{   
     private final ExampleDao exampleDao;
     
     //Example of constructor that creates an in memory cache only
-    public ExampleCache1(String cacheName, int cacheSize, ExampleDao exampleDao) throws Exception{
+    public ExampleCache(String cacheName, int cacheSize, ExampleDao exampleDao) throws Exception{
         super(cacheName, cacheSize);
         this.exampleDao = exampleDao;
     }
     
     //Example of constructor that creates an in memory and disk cache
-    public ExampleCache1(String cacheName, int cacheSize, ExampleDao exampleDao, String dataDir) throws Exception {
-        super(cacheName, cacheSize, true, dataDir);
+    public ExampleCache(String cacheName, int cacheSize, boolean diskPersist, String dataDirectory, ExampleDao exampleDao) throws Exception {
+        super(cacheName, cacheSize, true, dataDirectory);
         this.exampleDao = exampleDao;
     }
 
@@ -27,7 +27,8 @@ public class ExampleCache1 extends AbstractCacheService<ExampleObjectToCache>{
         You can use timestamps, last modified or any other parameters to determine
         if your cached object is valid.
     
-        You can also just test for not null. ie: return (null != o)
+        You can also just test for not null. ie: return (null != o).
+        Returning true if not null, means the cached object is always valid and never has to be reloaded.
 
         If you return true here, your cached object will be returned in the 'get' call.
         If you return false here, your cached object will be reloaded using your 'loadData' method.
@@ -45,6 +46,5 @@ public class ExampleCache1 extends AbstractCacheService<ExampleObjectToCache>{
     @Override
     public ExampleObjectToCache loadData(String key) throws Exception {
         return this.exampleDao.get(key);
-    }
-    
+    }    
 }

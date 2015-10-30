@@ -11,7 +11,7 @@ public class ExampleUsageMemoryAndDisk {
 
     private static final String dataDirectory = "./datadir";
 
-    public static ExampleCache1 cache;
+    public static ExampleCache cache;
 
     public static void main(String[] args) {
         try {
@@ -23,7 +23,7 @@ public class ExampleUsageMemoryAndDisk {
             }
 
             //For example, create cache that can be accessed by all parts of your code.
-            cache = new ExampleCache1("ExampleCache1", 10, new ExampleDao(), dataDirectory);
+            cache = new ExampleCache("ExampleCache1", 10, true, dataDirectory, new ExampleDao());
 
             //Use the cache
             runExample();
@@ -47,7 +47,9 @@ public class ExampleUsageMemoryAndDisk {
         cache.get(key);
         printHitMissStats(cache.getStats());
         p(" --- \n");
-
+        
+        //Clearing the cache is only for this test.
+        //You would probably not want to do this in your app, unless you want to remove all cache entries from memory.
         p("Clear cache to simulate your process shutting down");
         p("Key object is on disk only, not in memory");
         cache.clear();
