@@ -20,7 +20,7 @@ In your cache, override the two methods `isCacheItemValid` and `loadData`: (You 
 In the constructor call,  
 * `cacheName` is the name of your cache and is shown in the `getStats` call.  
 * `cacheSize` is the total number of items your cache will store.  When you add more items in the the cache that are greater than `cacheSize`, older items are removed on an LRU (Least Recently Used) basis.  
-* `dataDir` is a directory where cache items on disk are stored. (For memory and disk caching).  Each cache you create should have its own data directory.  This directory does not have to exist, however the process should have permissions to create it.  For first time usage, this directory should be empty.
+* `dataDir` is a directory where cache items are stored on disk. (For memory and disk caching).  Each cache you create should have its own data directory.  This directory does not have to exist, however the process should have permissions to create it.  For first time usage, this directory should be empty.
 * `true` in `super(cacheName, cacheSize, true, dataDir);` tells the cache that to use memory and disk caching
 
 ```java
