@@ -89,7 +89,7 @@ Map<String, Object> stats = cache.getStats()
 * Download https://github.com/gaurangsathaye/JavaLRUMemoryDiskCache/releases/download/1.0/JavaLRUMemoryDiskCache-1.0.jar
 * From the directory you downloaded the jar, run the following command to do a local maven install:  
   `mvn install:install-file -Dfile=JavaLRUMemoryDiskCache-1.0.jar -DgroupId=com.lru.memory.disk.cache -DartifactId=JavaLRUMemoryDiskCache -Dversion=1.0 -Dpackaging=jar`
-* Add to `<dependencies>`  
+* Add to your project's `<dependencies>`  
 ```xml
 <dependency>
     <groupId>com.lru.memory.disk.cache</groupId>
