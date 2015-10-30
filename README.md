@@ -78,7 +78,7 @@ public static ExampleCache1 cacheMemoryAndDisk =  new ExampleCache1("ExampleCach
 ExampleMyObjectToCache myObject = cacheMemoryAndDisk.get("key");
 Map<String, Object> stats = cacheMemoryAndDisk.getStats()
 ```
-You can create as many caches as you need. However you should use a single shareable instance of each cache you create.  Caches are thread safe and the same instance of each cache should be used throughout you application.  
+You can create as many caches as you need. However you should use a single shareable instance of each cache you create.  Caches are thread safe and the same instance of each cache should be used throughout your application.  
 For example:  
 ```java
 public class CarsCache extends AbstractCacheService<Car>{...}
