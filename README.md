@@ -25,17 +25,17 @@ In ExampleCache1 constructor call,
 * Since you are creating the cache, you can pass in any additional params to your constructor.  In this example, we pass in the `ExampleDao`.
 
 ```java
-public class ExampleCache1 extends AbstractCacheService<ExampleObjectToCache>{   
+public class ExampleCache extends AbstractCacheService<ExampleObjectToCache>{   
     private final ExampleDao exampleDao;
     
     //Example of constructor that creates an in memory cache only
-    public ExampleCache1(String cacheName, int cacheSize, ExampleDao exampleDao) throws Exception{
+    public ExampleCache(String cacheName, int cacheSize, ExampleDao exampleDao) throws Exception{
         super(cacheName, cacheSize);
         this.exampleDao = exampleDao;
     }
     
     //Example of constructor that creates an in memory and disk cache
-    public ExampleCache1(String cacheName, int cacheSize, boolean diskPersist, String dataDirectory, ExampleDao exampleDao) throws Exception {
+    public ExampleCache(String cacheName, int cacheSize, boolean diskPersist, String dataDirectory, ExampleDao exampleDao) throws Exception {
         super(cacheName, cacheSize, true, dataDirectory);
         this.exampleDao = exampleDao;
     }
