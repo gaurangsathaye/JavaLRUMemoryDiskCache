@@ -83,6 +83,7 @@ Map<String, Object> stats = cache.getStats()
 * **When using memory and disk caching, your cached objects must implement Serializable.  For memory only caching your cached objects do not have to implement Serializable.**
 * You cannot store null values in the cache. So if your `loadData(String key)` method returns a null object, the `public T get(String key)` call will throw an exception.  
 * The `com.lru.memory.disk.cache.CacheEntry` object is a utility wrapper object you can store your real object in.  It has a default timestamp for when the object is created.  ie: `public class ExampleCache extends AbstractCacheService<CacheEntry<YourObjectToCache>>`
+* As cached objects fall out of the LRU, they will also be removed from disk (If using disk caching).
 
 ## Install (Maven)
 * Download https://github.com/gaurangsathaye/JavaLRUMemoryDiskCache/releases/download/1.0/JavaLRUMemoryDiskCache-1.0.jar
