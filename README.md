@@ -83,12 +83,15 @@ For example:
 ```java
 public class CarsCache extends AbstractCacheService<Car>{...}
 public static CarsCache carsMemDiskCache = new CarsCache("CarsCache", 50000, true, "/data/directory/cars", new CarDao());
+Car porsche = carsMemDiskCache.get("911");
 
 public class BoatsCache extends AbstractCacheService<Boat>{...}
 public static BoatsCache boatsMemCache = new BoatsCache("BoatsCache", 50000, new BoatDao());
+Boat boat = boatsMemCache.get("rowboat");
 
 public class BlogsCache extends AbstractCacheService<Blog>{...}
 public static BlogsCache blogsMemDiskCache = new BlogsCache("BlogsCache", 50000, true, "/data/directory/blogs", new BlogsDao());
+Blog techBlog = blogsMemDiskCache.get("blogID");
 ```
 
 ## Other points:  
