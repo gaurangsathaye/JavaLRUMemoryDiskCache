@@ -75,8 +75,20 @@ public static ExampleCache1 cacheMemoryOnly = new ExampleCache1("ExampleCache1",
 or
 public static ExampleCache1 cacheMemoryAndDisk =  new ExampleCache1("ExampleCache1", 10, true, "/data/directory/forMyObject", new ExampleDao()); //memory and disk
 
-ExampleMyObjectToCache myObject = cache.get("key");
-Map<String, Object> stats = cache.getStats()
+ExampleMyObjectToCache myObject = cacheMemoryAndDisk.get("key");
+Map<String, Object> stats = cacheMemoryAndDisk.getStats()
+```
+You can create as many caches as you need. However you should use a single shareable instance of each cache you create.  Caches are thread safe and the same instance of each cache should be used throughout you application.  
+For example:  
+```java
+public class CarsCache extends AbstractCacheService<Car>{...}
+public static CarsCache carsMemDiskCache = new CarsCache("CarsCache", 50000, true, "/data/directory/cars", new CarDao());
+
+public class BoatsCache extends AbstractCacheService<Boat>{...}
+public static BoatsCache boatsMemCache = new BoatsCache("BoatsCache", 50000, new BoatDao());
+
+public class BlogsCache extends AbstractCacheService<Blog>{...}
+public static BlogsCache blogsMemDiskCache = new BlogsCache("BlogsCache", 50000, true, "/data/directory/blogs", new BlogsDao());
 ```
 
 ## Other points:  
