@@ -6,7 +6,7 @@ This is a thread safe, easy to use Java LRU in memory and disk cache.
 
 Some of the benefits of using the cache are...  
 * `public T get(String key)` - Gets your object from the cache.  If object is not in cache, it is loaded and put into the cache. Loading the object and putting into cache are all done for you behind the scenes. You tell the cache how to load your objects (see below).  There are other methods like `getOnly` and `putOnly` but this is probably the only method you need.
-* **Memory and disk storage**: Cached objects are stored in memory and disk (optional). In case you restart your process, the in memory cache will be lazy loaded from disk.  You don't lose your cache when starting and stopping your app.
+* **Memory and disk storage**: Cached objects are stored in memory and disk / file system (optional). In case you restart your process, the in memory cache will be lazy loaded from disk.  You don't lose your cache when starting and stopping your app.
 * `public final Map<String, Object> getStats()` - Get stats for your cache like hit ratio, cache size, hits, misses, etc.
 
 **See the `com.example.lru.memory.disk.cache` package (in src/test) for an example and details on how to create and use the cache.)**  
@@ -17,11 +17,12 @@ Some of the benefits of using the cache are...
 
 Override the two methods `isCacheItemValid` and `loadData`: (You do not call the `isCacheItemValid` and `loadData` methods directly.  You just need to define them, and they will be called by the internal cache as needed.  
 
-In the constructor call,  
+In ExampleCache1 constructor call,  
 * `cacheName` is the name of your cache and is shown in the `getStats` call.  
 * `cacheSize` is the total number of items your cache will store.  When you add more items in the the cache that are greater than `cacheSize`, older items are removed on an LRU (Least Recently Used) basis.  
-* `dataDir` is the directory where cache items are stored on disk. (For memory and disk caching).  Each cache you create should have its own data directory.  This directory does not have to exist, however the process should have permissions to create it.  For first time usage, this directory should be empty.
-* `true` in `super(cacheName, cacheSize, true, dataDir);` tells the cache that to use memory and disk caching
+* `diskPersist` (only for memory AND disk cache) tells the cache to use memory AND disk caching
+* `dataDirectory` (only for memory AND disk cache) is the directory where cache items are stored on disk.  Each cache you create should have its own unique data directory.  This directory does not have to exist, however the process should have permissions to create it.  For first time usage, this directory should be empty.
+* Since you are creating the cache, you can pass in any additional params to your constructor.  In this example, we pass in the `ExampleDao`.
 
 ```java
 public class ExampleCache1 extends AbstractCacheService<ExampleObjectToCache>{   
@@ -34,8 +35,8 @@ public class ExampleCache1 extends AbstractCacheService<ExampleObjectToCache>{
     }
     
     //Example of constructor that creates an in memory and disk cache
-    public ExampleCache1(String cacheName, int cacheSize, ExampleDao exampleDao, String dataDir) throws Exception {
-        super(cacheName, cacheSize, true, dataDir);
+    public ExampleCache1(String cacheName, int cacheSize, boolean diskPersist, String dataDirectory, ExampleDao exampleDao) throws Exception {
+        super(cacheName, cacheSize, true, dataDirectory);
         this.exampleDao = exampleDao;
     }
 
@@ -45,7 +46,8 @@ public class ExampleCache1 extends AbstractCacheService<ExampleObjectToCache>{
         You can use timestamps, last modified or any other parameters to determine
         if your cached object is valid.
     
-        You can also just test for not null. ie: return (null != o)
+        You can also just test for not null. ie: return (null != o).
+        Returning true if not null, means the cached object is always valid and never has to be reloaded.
 
         If you return true here, your cached object will be returned in the 'get' call.
         If you return false here, your cached object will be reloaded using your 'loadData' method.
@@ -63,8 +65,7 @@ public class ExampleCache1 extends AbstractCacheService<ExampleObjectToCache>{
     @Override
     public ExampleObjectToCache loadData(String key) throws Exception {
         return this.exampleDao.get(key);
-    }
-    
+    }    
 }
 ```
 
