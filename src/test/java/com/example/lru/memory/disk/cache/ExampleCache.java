@@ -17,7 +17,7 @@ public class ExampleCache extends AbstractCacheService<ExampleObjectToCache>{
     
     //Example of constructor that creates an in memory and disk cache
     public ExampleCache(String cacheName, int cacheSize, boolean diskPersist, String dataDirectory, ExampleDao exampleDao) throws Exception {
-        super(cacheName, cacheSize, true, dataDirectory);
+        super(cacheName, cacheSize, diskPersist, dataDirectory);
         this.exampleDao = exampleDao;
     }
 
