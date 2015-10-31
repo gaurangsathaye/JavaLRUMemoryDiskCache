@@ -21,10 +21,10 @@ Some of the benefits of using the cache are...
 Override the two methods `isCacheItemValid` and `loadData`: (You do not call the `isCacheItemValid` and `loadData` methods directly.  You just need to define them, and they will be called by the internal cache as needed.  
 
 **Cache constructor call**:    
-* `String cacheName` is the name of your cache and is shown in the `getStats` call.  
-* `int cacheSize` is the total number of items your cache will store.  When you add more items in the the cache that are greater than `cacheSize`, older items are removed on an LRU (Least Recently Used) basis.  
-* `boolean diskPersist` (only for memory AND disk cache) tells the cache to use memory AND disk caching
-* `String dataDirectory` (only for memory AND disk cache) is the directory where cache items are stored on disk.  Each cache you create should have its own unique data directory.  This directory does not have to exist, however the process should have permissions to create it.  For first time usage, this directory should be empty.
+* `String **cacheName**` is the name of your cache and is shown in the `getStats` call.  
+* `int **cacheSize**` is the total number of items your cache will store.  When you add more items in the the cache that are greater than `cacheSize`, older items are removed on an LRU (Least Recently Used) basis.  
+* `boolean **diskPersist**` (only for memory AND disk cache) tells the cache to use memory AND disk caching
+* `String **dataDirectory**` (only for memory AND disk cache) is the directory where cache items are stored on disk.  Each cache you create should have its own unique data directory.  This directory does not have to exist, however the process should have permissions to create it.  For first time usage, this directory should be empty.
 * Since you are creating the cache, you can pass in any additional params to your constructor.  In the `com.example.lru.memory.disk.cache.ExampleCache` class, we pass in the `ExampleDao`.
 
 ```java
