@@ -88,11 +88,11 @@ public class CarsCache extends AbstractCacheService<Car>{..isCacheItemValid(Car 
 public static CarsCache carsMemDiskCache = new CarsCache("CarsCache", 50000, true, "/data/directory/cars", new CarDao());
 Car porsche = carsMemDiskCache.get("911");
 
-public class JsonCache extends AbstractCacheService<String>{...}
+public class JsonCache extends AbstractCacheService<String>{..isCacheItemValid(String s){..}..String loadData(String key)..}
 public static JsonCache jsonMemDiskCache = new JsonCache("JsonCache", 50000, true, "/data/directory/json", new JsonLoader());
 String json = jsonMemDiskCache.get("http://jsonurl.com/file.html");
 
-public class BlogsCache extends AbstractCacheService<Blog>{...}
+public class BlogsCache extends AbstractCacheService<Blog>{..isCacheItemValid(Blog b){..}..Blog loadData(String key)..}
 public static BlogsCache blogsMemOnlyCache = new BlogsCache("BlogsCache", 50000, new BlogsDao());
 Blog techBlog = blogsMemOnlyCache.get("blogID");
 ```
