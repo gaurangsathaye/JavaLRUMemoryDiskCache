@@ -5,7 +5,7 @@ Java LRU Memory and Disk Cache
 This is a thread safe, easy to use Java LRU in memory and disk cache.  
 
 Some of the benefits of using the cache are...  
-* **`public T get(String key)`** - Gets your object from the cache.  If object is not in cache, it is loaded and put into the cache. Loading the object and putting into cache are all done for you behind the scenes. You tell the cache how to load your objects (see below).  There are other methods like `getOnly` and `putOnly` but this is probably the only method you need.
+* **`public T get(String key)`** - Gets your object from the cache.  If your object is not in cache, it is loaded and put into the cache. Loading the object and putting it into the cache, are all done for you behind the scenes. You tell the cache how to load your objects (see below).  There are other methods like `getOnly` and `putOnly` but this is probably the only method you need.
 * **Memory and disk storage**: Cached objects are stored in memory and disk / file system (optional). In case you restart your process, the in memory cache will be lazy loaded from disk.  You don't lose your cache when starting and stopping your app.
 * **`public final Map<String, Object> getStats()`** - Get stats for your cache like hit ratio, cache size, hits, misses, etc.
 
@@ -102,7 +102,7 @@ Blog techBlog = blogsMemDiskCache.get("blogID");
 * **When using memory and disk caching, your cached objects must implement Serializable.  For memory only caching, your cached objects do not have to implement Serializable.**
 * **When using the `CacheEntry` wrapper object, your cached objects must implement Serializable**
 * You cannot store null values in the cache. So if your `loadData(String key)` method returns a null object, the `public T get(String key)` call will throw an exception.  If you want to store 'NULL' objects, consider creating a cache as follows: `ExampleCache extends AbstractCacheService<CacheEntry<YourObjectToCache>>`, where the object you store in `CacheEntry` is NULL.
-* The `com.lru.memory.disk.cache.CacheEntry` object is a utility wrapper object you can store your real object in.  It has a constructor `public CacheEntry(T t, long timestamp)`.  `timestamp` can be used in your `isCacheItemValid` implementation.  (See the `com.example.lru.memory.disk.cache.ExampleUsageCacheEntryCache` example)  The `CacheEntry` object has `public T getCached()` and `public long getTimestamp()` methods. `getCached()` returns your object and `getTimestamp()` returns the timestamp used in the constructor.
+* The `com.lru.memory.disk.cache.CacheEntry` object is a utility wrapper object you can store your real object in.  It has a constructor `public CacheEntry(T t, long timestamp)`.  `timestamp` can, for example, be used in your `isCacheItemValid` implementation.  (See the `com.example.lru.memory.disk.cache.ExampleUsageCacheEntryCache` example).  The `CacheEntry` object has `public T getCached()` and `public long getTimestamp()` methods. `getCached()` returns your object and `getTimestamp()` returns the timestamp used in the constructor.
 * When the number of items in the cache become greater than `cacheSize` (see above), and cached objects fall out of memory via the LRU, they will also be removed from disk (If using disk caching).  The disk cache will contain as many and possibly more items than are present in memory.  This will be evident when the cache (memory and disk) is used over your application's stop start cycles.
 
 ## Install (Maven)
