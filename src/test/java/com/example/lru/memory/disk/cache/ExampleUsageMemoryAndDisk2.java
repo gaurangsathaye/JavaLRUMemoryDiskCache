@@ -37,12 +37,12 @@ public class ExampleUsageMemoryAndDisk2 {
      Create the cache with the cache name and the number of items you want to keep in the cache.
      */
     static void runExample() throws Exception {
-        ExecutorService pool = Executors.newFixedThreadPool(200);
+        ExecutorService pool = Executors.newFixedThreadPool(300);
         
         final Map<String, AtomicInteger> map  = new HashMap<>();
         map.put("ct", new AtomicInteger(0));
         
-        int total = 85000;
+        int total = 10000;
         
         
         for(int i=0;i<total;i++){
