@@ -25,7 +25,7 @@ Override the two methods `isCacheItemValid` and `loadData`: (You do not call the
 * `cacheSize` is the total number of items your cache will store.  When you add more items in the the cache that are greater than `cacheSize`, older items are removed on an LRU (Least Recently Used) basis.  
 * `diskPersist` (only for memory AND disk cache) tells the cache to use memory AND disk caching
 * `dataDirectory` (only for memory AND disk cache) is the directory where cache items are stored on disk.  Each cache you create should have its own unique data directory.  This directory does not have to exist, however the process should have permissions to create it.  For first time usage, this directory should be empty.
-* Since you are creating the cache, you can pass in any additional params to your constructor.  In the `com.example.lru.memory.disk.cache.ExampleCache` example, we pass in the `ExampleDao`.
+* Since you are creating the cache, you can pass in any additional params to your constructor.  In the `com.example.lru.memory.disk.cache.ExampleCache` class, we pass in the `ExampleDao`.
 
 ```java
 public class ExampleCache extends AbstractCacheService<ExampleObjectToCache>{   
