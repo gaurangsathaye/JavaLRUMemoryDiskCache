@@ -47,7 +47,7 @@ public class ExampleCache extends AbstractCacheService<ExampleObjectToCache>{
         You decide if your cached object is valid.
 
         You can use timestamps, last modified or any other parameters to determine
-        if your cached object is valid.
+        if your cached object is valid (return true), or whether it should be reloaded (return false).
     
         You can also just test for not null. ie: return (null != o).
         Returning true if not null, means the cached object is always valid and never has to be reloaded.
