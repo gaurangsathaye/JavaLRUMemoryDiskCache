@@ -20,7 +20,7 @@ Some of the benefits of using the cache are...
 
 Override the two methods `isCacheItemValid` and `loadData`: (You do not call the `isCacheItemValid` and `loadData` methods directly.  You just need to define them, and they will be called by the internal cache as needed.  
 
-In `com.example.lru.memory.disk.cache.ExampleCache` constructor call,  
+**Cache constructor call**:    
 * `cacheName` is the name of your cache and is shown in the `getStats` call.  
 * `cacheSize` is the total number of items your cache will store.  When you add more items in the the cache that are greater than `cacheSize`, older items are removed on an LRU (Least Recently Used) basis.  
 * `diskPersist` (only for memory AND disk cache) tells the cache to use memory AND disk caching
@@ -119,4 +119,4 @@ Blog techBlog = blogsMemDiskCache.get("blogID");
 ```
 
 ## To do:
-* Asynch load cache item if invalid and return cached entry immediately.
+* Distributed caching
