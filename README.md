@@ -2,11 +2,11 @@
 
 Java LRU Memory and Disk Cache
 
-This is a thread safe, easy to use Java LRU in memory and disk cache.  
+This is a thread safe, easy to use Java LRU disk and in memory.  
 
 Some of the benefits of using the cache are...  
 * **`public T get(String key)`** - Gets your object from the cache.  If your object is not in cache, it is loaded and put into the cache. Loading the object and putting it into the cache, are all done for you behind the scenes. You tell the cache how to load your objects (see below).  There are other methods like `getOnly` and `putOnly` but this is probably the only method you need.
-* **Memory and disk storage**: Cached objects are stored in memory and disk/file system (optional). In case you restart your process, the in memory cache will be lazy loaded from disk.  You don't lose your cached data after stopping and starting your app.
+* **Memory and persistent disk storage**: Cached objects are stored in memory and disk/file system (optional). In case you restart your process, the in memory cache will be lazy loaded from disk.  You don't lose your cached data after stopping and starting your app.
 * **`public final Map<String, Object> getStats()`** - Get stats for your cache like hit ratio, cache size, hits, misses, etc.
 
 **See the `com.example.lru.memory.disk.cache` package (in src/test) for an example and details on how to create and use the cache.)**  
@@ -82,19 +82,19 @@ ExampleMyObjectToCache myObject = cacheMemoryAndDisk.get("key");
 Map<String, Object> stats = cacheMemoryAndDisk.getStats()
 ```
 You can create as many caches as you need. However you should use a single shareable instance of each cache you create.  Caches are thread safe and the same instance of each cache should be used throughout your application.  
-For example:  
+**For example:**  
 ```java
-public class CarsCache extends AbstractCacheService<Car>{...}
+public class CarsCache extends AbstractCacheService<Car>{..isCacheItemValid(Car c){..}..Car loadData(String key)..}
 public static CarsCache carsMemDiskCache = new CarsCache("CarsCache", 50000, true, "/data/directory/cars", new CarDao());
 Car porsche = carsMemDiskCache.get("911");
 
-public class BoatsCache extends AbstractCacheService<Boat>{...}
-public static BoatsCache boatsMemCache = new BoatsCache("BoatsCache", 50000, new BoatDao());
-Boat boat = boatsMemCache.get("rowboat");
+public class JsonCache extends AbstractCacheService<String>{...}
+public static JsonCache jsonMemDiskCache = new JsonCache("JsonCache", 50000, true, "/data/directory/json", new JsonLoader());
+String json = jsonMemDiskCache.get("http://jsonurl.com/file.html");
 
 public class BlogsCache extends AbstractCacheService<Blog>{...}
-public static BlogsCache blogsMemDiskCache = new BlogsCache("BlogsCache", 50000, true, "/data/directory/blogs", new BlogsDao());
-Blog techBlog = blogsMemDiskCache.get("blogID");
+public static BlogsCache blogsMemOnlyCache = new BlogsCache("BlogsCache", 50000, new BlogsDao());
+Blog techBlog = blogsMemOnlyCache.get("blogID");
 ```
 
 ## Other points:  
