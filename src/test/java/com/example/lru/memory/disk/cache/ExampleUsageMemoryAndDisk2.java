@@ -42,15 +42,15 @@ public class ExampleUsageMemoryAndDisk2 {
         final Map<String, AtomicInteger> map  = new HashMap<>();
         map.put("ct", new AtomicInteger(0));
         
-        int total = 10000;
+        int total = 30000;
         
-        
+        long start = System.currentTimeMillis();
         for(int i=0;i<total;i++){
             final int id = i;
             pool.submit((new Callable<String>() {
                 @Override
                 public String call() throws Exception {
-                    int random = new Random().nextInt(70000);
+                    int random = new Random().nextInt(1000);
                     String key = Integer.toString(random);
                     long start = System.currentTimeMillis();
                     long end = 0L;
@@ -62,7 +62,7 @@ public class ExampleUsageMemoryAndDisk2 {
                     }catch(Exception e){
                         p("Fatal: " + e + " : cause: " + e.getCause());
                     }
-                    if((id % 500) == 0){
+                    if((id % (total/20)) == 0){
                         p("time: " + end + ", done:" + id + " : " + key + " : " + cache.getStats() + cache.getPathToFile(key));
                     }
                     map.get("ct").incrementAndGet();
@@ -72,7 +72,7 @@ public class ExampleUsageMemoryAndDisk2 {
         }
         
         while(true){
-            p("ct: " + map.get("ct").get());
+            p("ct: " + map.get("ct").get() + ", time: " + (System.currentTimeMillis() - start));
             if(map.get("ct").get() >= total){
                 System.exit(0);
             }

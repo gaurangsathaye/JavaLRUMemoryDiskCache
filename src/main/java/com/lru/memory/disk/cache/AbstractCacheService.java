@@ -20,6 +20,7 @@ public abstract class AbstractCacheService<T> implements DirLocate {
     private static final String KeyInternalGetFromDisk = "f";
     private static final String KeyInternalGetCachedObj = "o";
     private static final int NumberDiskShards = 1000;
+    private static final int ConcurrencyLevel = 100;
 
     protected LRUCache<String, T> cache;
     private final ReentrantReadWriteLock lock;
@@ -52,7 +53,7 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         this.statsMap = new HashMap<>();
         this.persist = diskPersist;        
         this.cache = new LRUCache<>(cacheSize, this);
-        this.lockMgr = new CacheLockManager(50);
+        this.lockMgr = new CacheLockManager(ConcurrencyLevel);
         if(this.persist) {
             this.dataDir = dataDirectory.trim().replaceAll("/$", "");
             init();
@@ -174,7 +175,10 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         try{
             T t = cache.get(key);
             if(persist && (null == t)){
+                long start = System.currentTimeMillis();
                 t = deserialize(key);
+                long end = System.currentTimeMillis() - start;
+                if(end > 200) p(key + ", deserialize time: " + end);
                 map.put(KeyInternalGetFromDisk, true);                
             }else{
                 map.put(KeyInternalGetFromDisk, false);
@@ -190,7 +194,10 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         try{
             cache.put(key, t);
             if(persist && overridePersist){
-                serialize(key, t);            
+                long start = System.currentTimeMillis();
+                serialize(key, t);
+                long end = System.currentTimeMillis() - start;
+                if(end > 200) p(key + ", serialize time: " + end);
             }
         }catch(Exception e){
             throw e;
@@ -261,9 +268,9 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         }
     }
     
-    /*static void p(Object o){
+    static void p(Object o){
         System.out.println(o);
-    }*/
+    }
     
     //Start DirLocate impl
     @Override
