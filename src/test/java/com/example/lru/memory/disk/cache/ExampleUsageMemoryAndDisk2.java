@@ -50,7 +50,7 @@ public class ExampleUsageMemoryAndDisk2 {
             pool.submit((new Callable<String>() {
                 @Override
                 public String call() throws Exception {
-                    int random = new Random().nextInt(1000);
+                    int random = new Random().nextInt(300000);
                     String key = Integer.toString(random);
                     long start = System.currentTimeMillis();
                     long end = 0L;
