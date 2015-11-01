@@ -5,7 +5,7 @@ This is a thread safe, easy to use Java LRU in memory and disk cache.
 Some of the benefits of using the cache are...  
 * **`public T get(String key)`** - Gets your object from the cache.  If your object is not in cache, it is loaded and put into the cache. Loading the object and putting it into the cache, are all done for you behind the scenes. You tell the cache how to load your objects (see below).  There are other methods like `getOnly` and `putOnly` but this is probably the only method you need.
 * **Memory and disk**: Cached objects are stored in memory and persisted on disk/file system (optional). In case you restart your process, the in memory cache will be lazy loaded from disk.  You don't lose your cached data after stopping and starting your app.
-* **Concurrency and thread safety**: Cache can be used in high request load and multi thread environments.  Reads are fully concurrent, writes have a high level of concurrency due to multi stage write locks.
+* **Concurrency and thread safety**: Cache can be used in high request load and multi thread environments.  Reads are fully concurrent and writes have a high level of concurrency due to multi stage write locks.
 * **`public final Map<String, Object> getStats()`** - Get stats for your cache like hit ratio, cache size, hits, misses, etc.
 
 **See the `com.example.lru.memory.disk.cache` package (in src/test) for an example and details on how to create and use the cache.)**  
