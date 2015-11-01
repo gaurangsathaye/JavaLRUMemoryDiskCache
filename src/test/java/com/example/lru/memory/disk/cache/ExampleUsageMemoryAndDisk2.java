@@ -25,6 +25,7 @@ public class ExampleUsageMemoryAndDisk2 {
         try {
             //For example, create cache that can be accessed by all parts of your code.
             cache = new ExampleCache("ExampleCache1", 50000, true, dataDirectory, new ExampleDao());
+                    //new ExampleCache("ExampleCache", 50000, new ExampleDao());
 
             //Use the cache
             runExample();
@@ -42,7 +43,7 @@ public class ExampleUsageMemoryAndDisk2 {
         final Map<String, AtomicInteger> map  = new HashMap<>();
         map.put("ct", new AtomicInteger(0));
         
-        int total = 30000;
+        int total = 10000;
         
         long start = System.currentTimeMillis();
         for(int i=0;i<total;i++){
@@ -50,7 +51,7 @@ public class ExampleUsageMemoryAndDisk2 {
             pool.submit((new Callable<String>() {
                 @Override
                 public String call() throws Exception {
-                    int random = new Random().nextInt(300000);
+                    int random = new Random().nextInt(2000);
                     String key = Integer.toString(random);
                     long start = System.currentTimeMillis();
                     long end = 0L;
