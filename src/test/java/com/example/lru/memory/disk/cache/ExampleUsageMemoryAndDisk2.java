@@ -25,6 +25,7 @@ public class ExampleUsageMemoryAndDisk2 {
         try {
             //For example, create cache that can be accessed by all parts of your code.
             cache = new ExampleCache("ExampleCache1", 50000, true, dataDirectory, new ExampleDao());
+                    //new ExampleCache("ExampleCache", 50000, new ExampleDao());
 
             //Use the cache
             runExample();
@@ -37,20 +38,20 @@ public class ExampleUsageMemoryAndDisk2 {
      Create the cache with the cache name and the number of items you want to keep in the cache.
      */
     static void runExample() throws Exception {
-        ExecutorService pool = Executors.newFixedThreadPool(200);
+        ExecutorService pool = Executors.newFixedThreadPool(300);
         
         final Map<String, AtomicInteger> map  = new HashMap<>();
         map.put("ct", new AtomicInteger(0));
         
-        int total = 85000;
+        int total = 10000;
         
-        
+        long start = System.currentTimeMillis();
         for(int i=0;i<total;i++){
             final int id = i;
             pool.submit((new Callable<String>() {
                 @Override
                 public String call() throws Exception {
-                    int random = new Random().nextInt(70000);
+                    int random = new Random().nextInt(2000);
                     String key = Integer.toString(random);
                     long start = System.currentTimeMillis();
                     long end = 0L;
@@ -62,7 +63,7 @@ public class ExampleUsageMemoryAndDisk2 {
                     }catch(Exception e){
                         p("Fatal: " + e + " : cause: " + e.getCause());
                     }
-                    if((id % 500) == 0){
+                    if((id % (total/20)) == 0){
                         p("time: " + end + ", done:" + id + " : " + key + " : " + cache.getStats() + cache.getPathToFile(key));
                     }
                     map.get("ct").incrementAndGet();
@@ -72,7 +73,7 @@ public class ExampleUsageMemoryAndDisk2 {
         }
         
         while(true){
-            p("ct: " + map.get("ct").get());
+            p("ct: " + map.get("ct").get() + ", time: " + (System.currentTimeMillis() - start));
             if(map.get("ct").get() >= total){
                 System.exit(0);
             }

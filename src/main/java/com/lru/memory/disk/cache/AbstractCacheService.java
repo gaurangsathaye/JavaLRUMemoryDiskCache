@@ -20,6 +20,7 @@ public abstract class AbstractCacheService<T> implements DirLocate {
     private static final String KeyInternalGetFromDisk = "f";
     private static final String KeyInternalGetCachedObj = "o";
     private static final int NumberDiskShards = 1000;
+    private static final int ConcurrencyLevel = 100;
 
     protected LRUCache<String, T> cache;
     private final ReentrantReadWriteLock lock;
@@ -33,6 +34,7 @@ public abstract class AbstractCacheService<T> implements DirLocate {
     private final Map<String, Object> statsMap;
     private boolean persist;
     private String dataDir;
+    private CacheLockManager lockMgr;
 
     public AbstractCacheService(String cacheName, int cacheSize) throws Exception {
         this(cacheName, cacheSize, false, null);
@@ -51,6 +53,7 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         this.statsMap = new HashMap<>();
         this.persist = diskPersist;        
         this.cache = new LRUCache<>(cacheSize, this);
+        this.lockMgr = new CacheLockManager(ConcurrencyLevel);
         if(this.persist) {
             this.dataDir = dataDirectory.trim().replaceAll("/$", "");
             init();
@@ -88,7 +91,7 @@ public abstract class AbstractCacheService<T> implements DirLocate {
 
     public T get(String key) throws Exception {
         if(Utl.areBlank(key)) throw new Exception("key is blank");
-        Map<String, Object> map = internalGetOnly(key);
+        Map<String, Object> map = internalGetOnly(key, true);
         boolean fromDisk = (Boolean) map.get(KeyInternalGetFromDisk);
         T o = (T) map.get(KeyInternalGetCachedObj);
         //p("Key: " + key + ", try from disk: " + fromDisk + ", obj from internalGetOnly: " + (null != o));
@@ -99,25 +102,26 @@ public abstract class AbstractCacheService<T> implements DirLocate {
             }
             return o;
         }
-        return putWithLookup(key);
+        return putWithLookup(key);        
     }
 
     public T putWithLookup(String key) throws Exception {
-        lock.writeLock().lock();
-        T o = ((T) internalGet(key).get(KeyInternalGetCachedObj));
+        ReentrantReadWriteLock.WriteLock ldWriteLock = this.lockMgr.getLock(key.hashCode()).writeLock();
+        ldWriteLock.lock();
+        T o = ((T) internalGetOnly(key, false).get(KeyInternalGetCachedObj));
         try {
             if (! isCacheItemValidInternal(o)) {
                 o = loadData(key);
                 if (null == o) {
                     throw new Exception("Key: " + key + " - Null values not allowed");
                 }
-                internalPut(key, o, true);
+                internalPutOnly(key, o, true);
             }
             return o;
         } catch (Exception e) {
             throw e;
         } finally {
-            lock.writeLock().unlock();
+            ldWriteLock.unlock();
         }
     }
 
@@ -140,21 +144,23 @@ public abstract class AbstractCacheService<T> implements DirLocate {
     }
 
     public T getOnly(String key) throws Exception {
-        return ((T) internalGetOnly(key).get(KeyInternalGetCachedObj));
+        return ((T) internalGetOnly(key, true).get(KeyInternalGetCachedObj));
     }
     
-    private Map<String, Object> internalGetOnly(String key) throws Exception {
+    private Map<String, Object> internalGetOnly(String key, boolean doStats) throws Exception {
         lock.readLock().lock();
         try {
             Map<String, Object> map = internalGet(key);
-            boolean tryDisk = (Boolean) map.get(KeyInternalGetFromDisk);
-            T t = (T) map.get(KeyInternalGetCachedObj);
-            if(null != t){
-                statsHits.incrementAndGet();
-                if(tryDisk) statsHitsDisk.incrementAndGet();
-                else statsHitsMemory.incrementAndGet();
-            }else{
-                statsMisses.incrementAndGet();
+            if(doStats){
+                boolean tryDisk = (Boolean) map.get(KeyInternalGetFromDisk);
+                T t = (T) map.get(KeyInternalGetCachedObj);
+                if(null != t){
+                    statsHits.incrementAndGet();
+                    if(tryDisk) statsHitsDisk.incrementAndGet();
+                    else statsHitsMemory.incrementAndGet();
+                }else{
+                    statsMisses.incrementAndGet();
+                }
             }
             return map;
         } catch (Exception e) {
@@ -169,7 +175,10 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         try{
             T t = cache.get(key);
             if(persist && (null == t)){
+                long start = System.currentTimeMillis();
                 t = deserialize(key);
+                long end = System.currentTimeMillis() - start;
+                if(end > 200) p(key + ", deserialize time: " + end);
                 map.put(KeyInternalGetFromDisk, true);                
             }else{
                 map.put(KeyInternalGetFromDisk, false);
@@ -185,7 +194,10 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         try{
             cache.put(key, t);
             if(persist && overridePersist){
-                serialize(key, t);            
+                long start = System.currentTimeMillis();
+                serialize(key, t);
+                long end = System.currentTimeMillis() - start;
+                if(end > 200) p(key + ", serialize time: " + end);
             }
         }catch(Exception e){
             throw e;
@@ -256,9 +268,9 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         }
     }
     
-    /*static void p(Object o){
+    static void p(Object o){
         System.out.println(o);
-    }*/
+    }
     
     //Start DirLocate impl
     @Override
