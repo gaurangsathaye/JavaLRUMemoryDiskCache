@@ -28,6 +28,7 @@ public class ExampleUsageMemoryOnly {
      Create the cache with the cache name and the number of items you want to keep in the cache.
      */
     static void runExample() throws Exception {
+        p("start runExample");
         for(int i=0;i<1000;i++) {
             ExampleObjectToCache cachedObject = cache.get(Integer.toString(new Random().nextInt(200)));
             doSomethingWithCachedObject(cachedObject);

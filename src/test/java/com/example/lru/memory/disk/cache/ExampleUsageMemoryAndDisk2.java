@@ -40,7 +40,7 @@ public class ExampleUsageMemoryAndDisk2 {
         final Map<String, AtomicInteger> map  = new HashMap<>();
         map.put("ct", new AtomicInteger(0));
         
-        int total = 10000;
+        int total = 30000;
         
         long start = System.currentTimeMillis();
         for(int i=0;i<total;i++){
@@ -48,7 +48,7 @@ public class ExampleUsageMemoryAndDisk2 {
             pool.submit((new Callable<String>() {
                 @Override
                 public String call() throws Exception {
-                    int random = new Random().nextInt(2000);
+                    int random = new Random().nextInt(3000);
                     String key = Integer.toString(random);
                     long start = System.currentTimeMillis();
                     long end = 0L;

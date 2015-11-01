@@ -175,10 +175,10 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         try{
             T t = cache.get(key);
             if(persist && (null == t)){
-                long start = System.currentTimeMillis();
+                //long start = System.currentTimeMillis();
                 t = deserialize(key);
-                long end = System.currentTimeMillis() - start;
-                if(end > 200) p(key + ", deserialize time: " + end);
+                //long end = System.currentTimeMillis() - start;
+                //if(end > 200) p(key + ", deserialize time: " + end);
                 map.put(KeyInternalGetFromDisk, true);                
             }else{
                 map.put(KeyInternalGetFromDisk, false);
@@ -194,10 +194,10 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         try{
             cache.put(key, t);
             if(persist && overridePersist){
-                long start = System.currentTimeMillis();
+                //long start = System.currentTimeMillis();
                 serialize(key, t);
-                long end = System.currentTimeMillis() - start;
-                if(end > 200) p(key + ", serialize time: " + end);
+                //long end = System.currentTimeMillis() - start;
+                //if(end > 200) p(key + ", serialize time: " + end);
             }
         }catch(Exception e){
             throw e;
@@ -268,9 +268,9 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         }
     }
     
-    static void p(Object o){
+    /*static void p(Object o){
         System.out.println(o);
-    }
+    }*/
     
     //Start DirLocate impl
     @Override

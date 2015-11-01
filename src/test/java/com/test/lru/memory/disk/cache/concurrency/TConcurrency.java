@@ -1,7 +1,6 @@
 package com.test.lru.memory.disk.cache.concurrency;
 
 import com.lru.memory.disk.cache.AbstractCacheService;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  *
