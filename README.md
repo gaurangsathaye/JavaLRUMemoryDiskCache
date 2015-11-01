@@ -105,15 +105,15 @@ Blog techBlog = blogsMemOnlyCache.get("blogID");
 * When the number of items in the cache become greater than `cacheSize` (see above), and cached objects fall out of memory via the LRU, they will also be removed from disk (If using disk caching).  The disk cache will contain as many and possibly more items than are present in memory.  This will be evident when the cache (memory and disk) is used over your application's stop start cycles.
 
 ## Install (Maven)
-* Download https://github.com/gaurangsathaye/JavaLRUMemoryDiskCache/releases/download/1.0/JavaLRUMemoryDiskCache-1.0.jar
+* Download https://github.com/gaurangsathaye/JavaLRUMemoryDiskCache/releases/download/1.1/JavaLRUMemoryDiskCache-1.1.jar
 * From the directory you downloaded the jar, run the following command to do a local maven install:  
-  `mvn install:install-file -Dfile=JavaLRUMemoryDiskCache-1.0.jar -DgroupId=com.lru.memory.disk.cache -DartifactId=JavaLRUMemoryDiskCache -Dversion=1.0 -Dpackaging=jar`
+  `mvn install:install-file -Dfile=JavaLRUMemoryDiskCache-1.1.jar -DgroupId=com.lru.memory.disk.cache -DartifactId=JavaLRUMemoryDiskCache -Dversion=1.1 -Dpackaging=jar`
 * Add to your project's `<dependencies>`  
 ```xml
 <dependency>
     <groupId>com.lru.memory.disk.cache</groupId>
     <artifactId>JavaLRUMemoryDiskCache</artifactId>
-    <version>1.0</version>
+    <version>1.1</version>
 </dependency>
 ```
 
