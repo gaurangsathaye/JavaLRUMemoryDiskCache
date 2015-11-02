@@ -59,35 +59,13 @@ public abstract class AbstractCacheService<T> implements DirLocate {
             init();
         }
     }
-    
-    private void init() throws Exception {
-        File dir = new File(this.dataDir);
-        if(dir.exists() && dir.isFile()) throw new Exception("data dir: " + this.dataDir + ", is a file, should be a directory");
-        if(! dir.exists()){
-            dir.mkdirs();
-        }
-        
-        for(int i=0;i < NumberDiskShards;i++){
-            File shardDir = new File(dir, Integer.toString(i));
-            if(shardDir.exists() && shardDir.isDirectory()) continue;
-            if(shardDir.exists() && (! shardDir.isDirectory())){
-                shardDir.delete();         
-            }
-            shardDir.mkdir();
-        }
-    }
 
     public abstract boolean isCacheItemValid(T o);
-    
-    private boolean isCacheItemValidInternal(T o) {
-        try{
-            return isCacheItemValid(o);
-        }catch(Exception e){
-            return false;
-        }
-    }
-
     public abstract T loadData(String key) throws Exception;
+    
+    public String getCacheName(){
+        return this.cacheName;
+    }
 
     public T get(String key) throws Exception {
         if(Utl.areBlank(key)) throw new Exception("key is blank");
@@ -102,7 +80,7 @@ public abstract class AbstractCacheService<T> implements DirLocate {
             }
             return o;
         }
-        return putWithLookup(key);        
+        return putWithLookup(key);
     }
 
     public T putWithLookup(String key) throws Exception {
@@ -129,6 +107,77 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         internalPutOnly(key, o, true);
     }
     
+    public T getOnly(String key) throws Exception {
+        return ((T) internalGetOnly(key, true).get(KeyInternalGetCachedObj));
+    }
+    
+    public final Map<String, Object> getStats() {
+        long hits = statsHits.get();
+        long misses = statsMisses.get();
+        statsMap.put("cacheName", cacheName);
+        statsMap.put("hits", hits);
+        statsMap.put("hitsDisk", statsHitsDisk.get());
+        statsMap.put("hitsMemory", statsHitsMemory.get());
+        statsMap.put("misses", misses);
+        statsMap.put("hitratio",
+                (hits < 1) ? 0.0 : (((double) hits) / ((double) (hits + misses)))
+        );
+        statsMap.put("cacheMaxSize", cacheSize);
+        statsMap.put("cacheCurrentSize", cache.size());
+        return statsMap;
+    }
+    
+    public void clear() throws Exception {        
+        lock.writeLock().lock();
+        try {
+            cache.clear();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            lock.writeLock().unlock();
+        }
+    } 
+    
+    //Start DirLocate impl
+    @Override
+    public String getPathToFile(String key) throws Exception {
+        if(! isDiskPersistent()) return null;
+        if(Utl.areBlank(key)) throw new Exception("key: " + key + " : invalid");
+        return this.dataDir + "/" + (Math.abs(key.hashCode()) % NumberDiskShards) + "/" + Utl.sha256(key);
+    }   
+
+    @Override
+    public boolean isDiskPersistent() {
+        return this.persist;
+    }
+    //End DirLocate impl
+    
+    
+    private boolean isCacheItemValidInternal(T o) {
+        try{
+            return isCacheItemValid(o);
+        }catch(Exception e){
+            return false;
+        }
+    }
+    
+    private void init() throws Exception {
+        File dir = new File(this.dataDir);
+        if(dir.exists() && dir.isFile()) throw new Exception("data dir: " + this.dataDir + ", is a file, should be a directory");
+        if(! dir.exists()){
+            dir.mkdirs();
+        }
+        
+        for(int i=0;i < NumberDiskShards;i++){
+            File shardDir = new File(dir, Integer.toString(i));
+            if(shardDir.exists() && shardDir.isDirectory()) continue;
+            if(shardDir.exists() && (! shardDir.isDirectory())){
+                shardDir.delete();         
+            }
+            shardDir.mkdir();
+        }
+    }
+    
     private void internalPutOnly(String key, T o, boolean overridePersist) throws Exception {
         if (null == o) {
             throw new Exception("Key: " + key + " - Null values not allowed");
@@ -141,12 +190,8 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         } finally {
             lock.writeLock().unlock();
         }
-    }
-
-    public T getOnly(String key) throws Exception {
-        return ((T) internalGetOnly(key, true).get(KeyInternalGetCachedObj));
-    }
-    
+    }   
+        
     private Map<String, Object> internalGetOnly(String key, boolean doStats) throws Exception {
         lock.readLock().lock();
         try {
@@ -240,52 +285,8 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         }
         return null;
     }
-
-    public final Map<String, Object> getStats() {
-        long hits = statsHits.get();
-        long misses = statsMisses.get();
-        statsMap.put("cacheName", cacheName);
-        statsMap.put("hits", hits);
-        statsMap.put("hitsDisk", statsHitsDisk.get());
-        statsMap.put("hitsMemory", statsHitsMemory.get());
-        statsMap.put("misses", misses);
-        statsMap.put("hitratio",
-                (hits < 1) ? 0.0 : (((double) hits) / ((double) (hits + misses)))
-        );
-        statsMap.put("cacheMaxSize", cacheSize);
-        statsMap.put("cacheCurrentSize", cache.size());
-        return statsMap;
-    }
-    
-    public void clear() throws Exception {        
-        lock.writeLock().lock();
-        try {
-            cache.clear();
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            lock.writeLock().unlock();
-        }
-    }
     
     /*static void p(Object o){
-        System.out.println(o);
+      System.out.println(o);
     }*/
-    
-    //Start DirLocate impl
-    @Override
-    public String getPathToFile(String key) throws Exception {
-        if(! isDiskPersistent()) return null;
-        if(Utl.areBlank(key)) throw new Exception("key: " + key + " : invalid");
-        return this.dataDir + "/" + (Math.abs(key.hashCode()) % NumberDiskShards) + "/" + Utl.sha256(key);
-     }
-    
-    
-    //End DirLocate impl
-
-    @Override
-    public boolean isDiskPersistent() {
-        return this.persist;
-    }
-    
 } //end class

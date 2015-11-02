@@ -33,4 +33,18 @@ public class Utl {
         }
         return result.toString();
     }
+    
+    public static void closeAll(AutoCloseable[] arr) {
+        if ( (null == arr) || (arr.length < 1) ) {
+            return;
+        }
+        for (AutoCloseable ac : arr) {
+            try {
+                if (null != ac) {
+                    ac.close();
+                }
+            } catch (Exception e) {
+            }
+        }
+    }
 }
