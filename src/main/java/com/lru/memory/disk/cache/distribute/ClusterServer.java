@@ -1,6 +1,7 @@
 package com.lru.memory.disk.cache.distribute;
 
 import com.lru.memory.disk.cache.Utl;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *
@@ -9,7 +10,7 @@ import com.lru.memory.disk.cache.Utl;
 public class ClusterServer {
     private final String host;
     private final int port;
-    private boolean self = false;
+    private AtomicBoolean self = new AtomicBoolean(false);
     
     public ClusterServer(String host, String port) throws Exception{
         if(Utl.areBlank(host)) throw new Exception("host is blank");
@@ -30,15 +31,15 @@ public class ClusterServer {
     }   
 
     public boolean isSelf() {
-        return self;
+        return self.get();
     }
 
     public void setSelf(boolean self) {
-        this.self = self;
+        this.self.set(self);
     }
 
     @Override
     public String toString() {
-        return "ClusterServer{" + "host=" + host + ", port=" + port + ", self=" + self + '}';
+        return "ClusterServer{" + "host=" + host + ", port=" + port + ", self=" + self.get() + '}';
     }   
 }

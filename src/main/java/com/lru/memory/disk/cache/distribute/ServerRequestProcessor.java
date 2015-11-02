@@ -41,10 +41,26 @@ public class ServerRequestProcessor implements Runnable {
             
             if(Utl.areBlank(cacheKey, cacheName, serverHost)){
                 csrr.setServerError(true);
-            }else{
-                
-            }   
+                csrr.setServerErrorMessage("cacheKey, cacheName or serverHost is blank");
+                os = clientSocket.getOutputStream();
+                oos = new ObjectOutputStream(os);
+                oos.writeObject(csrr);
+                oos.flush();
+                return;
+            }
             
+            if( (! this.distMgr.getFoundSelf()) &&  (! this.distMgr.setSelfOnClusterServers(serverHost)) ){
+                csrr.setServerError(true);
+                csrr.setServerErrorMessage("Unable to self detect for serverHost: " + serverHost);
+                os = clientSocket.getOutputStream();
+                oos = new ObjectOutputStream(os);
+                oos.writeObject(csrr);
+                oos.flush();
+                return;
+            }
+            
+            ClusterServer clusterServer = this.distMgr.getClusterServerForCacheKey(cacheKey);
+            csrr.setServerSetData(clusterServer.toString());
             csrr.setServerResponse(true);
             
             os = clientSocket.getOutputStream();

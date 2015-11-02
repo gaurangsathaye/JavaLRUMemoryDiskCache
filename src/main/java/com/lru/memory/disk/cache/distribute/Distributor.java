@@ -28,4 +28,8 @@ public class Distributor {
         }
         distMgrMap.put(Integer.toString(serverPort), new DistributedManager(serverPort, cluster, caches));
     }
+    
+    public static DistributedManager getDistMgr(int serverPort){
+        return distMgrMap.get(Integer.toString(serverPort));
+    }
 }

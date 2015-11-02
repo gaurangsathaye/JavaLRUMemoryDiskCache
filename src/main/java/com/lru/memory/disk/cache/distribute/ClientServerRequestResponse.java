@@ -17,6 +17,7 @@ public class ClientServerRequestResponse<T extends Serializable> implements Seri
     private T serverSetData;
     private boolean serverError = false;
     private boolean serverResponse = false;
+    private String serverErrorMessage;
     
     public ClientServerRequestResponse(String clientSetServerHost, String clientSetCacheKey, String clientSetCacheName){
         this.clientSetServerHost = clientSetServerHost;
@@ -59,4 +60,12 @@ public class ClientServerRequestResponse<T extends Serializable> implements Seri
     public void setServerResponse(boolean serverResponse) {
         this.serverResponse = serverResponse;
     }  
+
+    public String getServerErrorMessage() {
+        return serverErrorMessage;
+    }
+
+    public void setServerErrorMessage(String serverErrorMessage) {
+        this.serverErrorMessage = serverErrorMessage;
+    }   
 }
