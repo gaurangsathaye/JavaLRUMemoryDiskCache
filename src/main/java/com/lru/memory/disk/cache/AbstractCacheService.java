@@ -309,7 +309,7 @@ public abstract class AbstractCacheService<T> implements DirLocate {
     }
     
     //Distributed
-    public void setDistributedManager(DistributedManager dm) throws Exception {
+    void setDistributedManager(DistributedManager dm) throws Exception {
         if(null == dm) throw new Exception("Distributed Manager is null");
         this.distMgr = dm;
         this.distributed = true;
