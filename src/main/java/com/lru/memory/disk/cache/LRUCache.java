@@ -10,14 +10,14 @@ import java.util.Map.Entry;
  * @param <K>
  * @param <V>
  */
-public class LRUCache<K extends String, V> extends LinkedHashMap<K, V> {
+class LRUCache<K extends String, V> extends LinkedHashMap<K, V> {
 
     private static final long serialVersionUID = 1L;
     private static final float loadfactor = 0.75f;
     private final int cachesize;
     private final DirLocate dirLocate;
 
-    public LRUCache(int cachesize, DirLocate dirLocate) {
+    LRUCache(int cachesize, DirLocate dirLocate) {
         super((int) Math.ceil(cachesize / loadfactor), loadfactor, true);
         this.cachesize = cachesize;
         this.dirLocate = dirLocate;

@@ -1,4 +1,4 @@
-package com.lru.memory.disk.cache.distribute;
+package com.lru.memory.disk.cache;
 
 import com.lru.memory.disk.cache.Utl;
 import java.io.InputStream;
@@ -12,11 +12,11 @@ import java.net.Socket;
  *
  * @author sathayeg
  */
-public class ServerRequestProcessor implements Runnable {    
+class DistributedServerRequestProcessor implements Runnable {    
     private final Socket clientSocket;
     private final DistributedManager distMgr;
     
-    public ServerRequestProcessor(Socket clientSocket, DistributedManager dm) {
+    public DistributedServerRequestProcessor(Socket clientSocket, DistributedManager dm) {
         this.clientSocket = clientSocket;
         this.distMgr = dm;
     }
@@ -34,7 +34,7 @@ public class ServerRequestProcessor implements Runnable {
         try{            
             is = clientSocket.getInputStream();           
             ois = new ObjectInputStream(is);
-            ClientServerRequestResponse<Serializable> csrr = (ClientServerRequestResponse<Serializable>) ois.readObject();
+            DistributedRequestResponse<Serializable> csrr = (DistributedRequestResponse<Serializable>) ois.readObject();
             String cacheKey = csrr.getClientSetCacheKey();
             String cacheName = csrr.getClientSetCacheName();
             String serverHost = csrr.getClientSetServerHost();
@@ -59,7 +59,7 @@ public class ServerRequestProcessor implements Runnable {
                 return;
             }
             
-            ClusterServer clusterServer = this.distMgr.getClusterServerForCacheKey(cacheKey);
+            DistributedConfigServer clusterServer = this.distMgr.getClusterServerForCacheKey(cacheKey);
             csrr.setServerSetData(clusterServer.toString());
             csrr.setServerResponse(true);
             

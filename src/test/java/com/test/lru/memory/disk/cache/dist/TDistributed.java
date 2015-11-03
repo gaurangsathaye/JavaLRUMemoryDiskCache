@@ -2,10 +2,10 @@ package com.test.lru.memory.disk.cache.dist;
 
 import com.lru.memory.disk.cache.AbstractCacheService;
 import com.lru.memory.disk.cache.Utl;
-import com.lru.memory.disk.cache.distribute.ClientServerRequestResponse;
-import com.lru.memory.disk.cache.distribute.ClusterServer;
-import com.lru.memory.disk.cache.distribute.DistributedManager;
-import com.lru.memory.disk.cache.distribute.Distributor;
+import com.lru.memory.disk.cache.DistributedRequestResponse;
+import com.lru.memory.disk.cache.DistributedConfigServer;
+import com.lru.memory.disk.cache.DistributedManager;
+import com.lru.memory.disk.cache.Distributor;
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.InputStream;
@@ -75,7 +75,7 @@ public class TDistributed {
 
         AutoCloseable closeables[] = {is, os, oos, ois, clientSock};
         try {
-            ClusterServer clusterServer = distMgr.getClusterServerForCacheKey(key);
+            DistributedConfigServer clusterServer = distMgr.getClusterServerForCacheKey(key);
             p("client: key: " + key + ", cluster server: " + clusterServer.toString());
             if(clusterServer.isSelf()){
                 p("key: " + key + ", get from jvm");
@@ -85,7 +85,7 @@ public class TDistributed {
             
             p("create client sock: " + clusterServer.getHost() + ", " + clusterServer.getPort());
             clientSock = new Socket(clusterServer.getHost(), clusterServer.getPort());
-            ClientServerRequestResponse<Serializable> cssr = new ClientServerRequestResponse<>(clusterServer.getHost(), key, cache.getCacheName());
+            DistributedRequestResponse<Serializable> cssr = new DistributedRequestResponse<>(clusterServer.getHost(), key, cache.getCacheName());
             
             os = clientSock.getOutputStream();
             oos = new ObjectOutputStream(os);
@@ -94,7 +94,7 @@ public class TDistributed {
             
             is = clientSock.getInputStream();
             ois = new ObjectInputStream(is);
-            ClientServerRequestResponse<Serializable> resp = (ClientServerRequestResponse<Serializable>) ois.readObject();
+            DistributedRequestResponse<Serializable> resp = (DistributedRequestResponse<Serializable>) ois.readObject();
             p("resp getClientSetCacheKey: " + resp.getClientSetCacheKey());
             p("resp: getClientSetCacheName: " + resp.getClientSetCacheName());
             p("resp: getClientSetServerHost: " + resp.getClientSetServerHost());

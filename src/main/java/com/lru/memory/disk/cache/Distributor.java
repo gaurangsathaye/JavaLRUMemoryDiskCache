@@ -1,4 +1,4 @@
-package com.lru.memory.disk.cache.distribute;
+package com.lru.memory.disk.cache;
 
 import com.lru.memory.disk.cache.AbstractCacheService;
 import java.io.Serializable;

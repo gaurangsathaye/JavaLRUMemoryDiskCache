@@ -1,18 +1,17 @@
-package com.lru.memory.disk.cache.distribute;
+package com.lru.memory.disk.cache;
 
-import com.lru.memory.disk.cache.Utl;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *
  * @author sathayeg
  */
-public class ClusterServer {
+ public class DistributedConfigServer {
     private final String host;
     private final int port;
     private AtomicBoolean self = new AtomicBoolean(false);
     
-    public ClusterServer(String host, String port) throws Exception{
+    public DistributedConfigServer(String host, String port) throws Exception{
         if(Utl.areBlank(host, port)) throw new Exception("host and/or port is blank");
         this.host = host.trim().toLowerCase();
         try{
@@ -34,7 +33,7 @@ public class ClusterServer {
         return self.get();
     }
 
-    public void setSelf(boolean self) {
+    void setSelf(boolean self) {
         this.self.set(self);
     }
 

@@ -1,8 +1,7 @@
 package com.lru.memory.disk.cache;
 
-import com.lru.memory.disk.cache.distribute.ClientServerRequestResponse;
-import com.lru.memory.disk.cache.distribute.ClusterServer;
-import com.lru.memory.disk.cache.distribute.DistributedManager;
+import com.lru.memory.disk.cache.exceptions.InvalidCacheConfigurationException;
+import com.lru.memory.disk.cache.exceptions.LruCacheSerializationException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -49,9 +48,9 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         this(cacheName, cacheSize, false, null);
     }
     
-    public AbstractCacheService(String cacheName, int cacheSize, boolean diskPersist, String dataDirectory) throws Exception{
-        if(Utl.areBlank(cacheName) || cacheSize < 1) throw new Exception("cacheName and/or cacheSize invalid");
-        if(diskPersist && Utl.areBlank(dataDirectory) ) throw new Exception("Invalid data directory");
+    public AbstractCacheService(String cacheName, int cacheSize, boolean diskPersist, String dataDirectory) throws InvalidCacheConfigurationException, Exception{
+        if(Utl.areBlank(cacheName) || cacheSize < 1) throw new InvalidCacheConfigurationException("cacheName and/or cacheSize invalid", null);
+        if(diskPersist && Utl.areBlank(dataDirectory) ) throw new InvalidCacheConfigurationException("Invalid data directory", null);
         this.cacheName = cacheName.trim();        
         this.lock = new ReentrantReadWriteLock();
         this.statsHits = new AtomicLong(0L);

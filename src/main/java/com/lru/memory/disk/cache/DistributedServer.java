@@ -1,4 +1,4 @@
-package com.lru.memory.disk.cache.distribute;
+package com.lru.memory.disk.cache;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -9,25 +9,25 @@ import java.util.concurrent.Executors;
  *
  * @author sathayeg
  */
-public class Server implements Runnable {
+class DistributedServer implements Runnable {
         
     private ServerSocket serverSocket = null;
     private final ExecutorService threadPool = Executors.newFixedThreadPool(10);
     private final int port;   
     private final DistributedManager distributedManager;
 
-    public Server(int port, DistributedManager distributedManager) {
+    DistributedServer(int port, DistributedManager distributedManager) {
         this.port = port;
         this.distributedManager = distributedManager;
     }
 
-    public void startServer() throws IOException {
+    void startServer() throws IOException {
         try{
             this.serverSocket = new ServerSocket(port);
             p("server started on port: " + port);
             while(true){
                 try{
-                    this.threadPool.execute(new ServerRequestProcessor(serverSocket.accept(), this.distributedManager));
+                    this.threadPool.execute(new DistributedServerRequestProcessor(serverSocket.accept(), this.distributedManager));
                 }catch(Exception e){
                 }                
             }

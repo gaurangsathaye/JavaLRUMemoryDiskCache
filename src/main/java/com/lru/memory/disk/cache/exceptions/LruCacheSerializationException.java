@@ -1,4 +1,4 @@
-package com.lru.memory.disk.cache;
+package com.lru.memory.disk.cache.exceptions;
 
 /**
  *

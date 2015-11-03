@@ -1,4 +1,4 @@
-package com.lru.memory.disk.cache.distribute;
+package com.lru.memory.disk.cache;
 
 import java.io.Serializable;
 
@@ -7,7 +7,7 @@ import java.io.Serializable;
  * @author sathayeg
  * @param <T>
  */
-public class ClientServerRequestResponse<T extends Serializable> implements Serializable{
+public class DistributedRequestResponse<T extends Serializable> implements Serializable{
     private static final long serialVersionUID = 1L;
     
     private final String clientSetServerHost;
@@ -19,7 +19,7 @@ public class ClientServerRequestResponse<T extends Serializable> implements Seri
     private boolean serverResponse = false;
     private String serverErrorMessage;
     
-    public ClientServerRequestResponse(String clientSetServerHost, String clientSetCacheKey, String clientSetCacheName){
+    public DistributedRequestResponse(String clientSetServerHost, String clientSetCacheKey, String clientSetCacheName){
         this.clientSetServerHost = clientSetServerHost;
         this.clientSetCacheKey = clientSetCacheKey;
         this.clientSetCacheName = clientSetCacheName;

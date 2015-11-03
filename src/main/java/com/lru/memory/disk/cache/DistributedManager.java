@@ -1,4 +1,4 @@
-package com.lru.memory.disk.cache.distribute;
+package com.lru.memory.disk.cache;
 
 import com.lru.memory.disk.cache.AbstractCacheService;
 import com.lru.memory.disk.cache.Utl;
@@ -16,9 +16,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class DistributedManager {
     
     private int serverPort;
-    private final List<ClusterServer> clusterServers = new ArrayList<>();
+    private final List<DistributedConfigServer> clusterServers = new ArrayList<>();
     private final Map<String, AbstractCacheService<? extends Serializable>> cacheMap = new HashMap<>();
-    private final Server server;
+    private final DistributedServer server;
     private final String clusterConfig;
     private final AtomicBoolean foundSelf = new AtomicBoolean(false);
     
@@ -36,43 +36,43 @@ public class DistributedManager {
         createClusterServers(clusterConfig);
         createCacheMap(caches);
         
-        this.server = new Server(serverPort, this);
+        this.server = new DistributedServer(serverPort, this);
         startServer();
     }
     
-    public ClusterServer getClusterServerForCacheKey(String key) throws Exception{
+    public DistributedConfigServer getClusterServerForCacheKey(String key) throws Exception{
         if(Utl.areBlank(key)) throw new Exception("key is blank");
         return clusterServers.get((Math.abs(key.hashCode()) % this.numberOfClusterServers));
     }
     
-    public boolean getFoundSelf(){
-        return this.foundSelf.get();
-    }
-    
-    public synchronized boolean setSelfOnClusterServers(String serverHostFromClient){
-        if(foundSelf.get()) return true;
-        if(Utl.areBlank(serverHostFromClient)) return false;
-        serverHostFromClient = serverHostFromClient.trim().toLowerCase();
-        for(ClusterServer cs:clusterServers){
-            if(cs.getHost().equals(serverHostFromClient) && (cs.getPort()==serverPort)){
-                cs.setSelf(true);
-                foundSelf.set(true);
-            }
-        }
-        return foundSelf.get();
-    }
-
     public int getServerPort() {
         return serverPort;
     }
 
-    public List<ClusterServer> getClusterServers() {
+    public List<DistributedConfigServer> getClusterServers() {
         return clusterServers;
     }
 
     public Map<String, AbstractCacheService<? extends Serializable>> getCacheMap() {
         return cacheMap;
     }   
+    
+    boolean getFoundSelf(){
+        return this.foundSelf.get();
+    }
+    
+    synchronized boolean setSelfOnClusterServers(String serverHostFromClient){
+        if(foundSelf.get()) return true;
+        if(Utl.areBlank(serverHostFromClient)) return false;
+        serverHostFromClient = serverHostFromClient.trim().toLowerCase();
+        for(DistributedConfigServer cs:clusterServers){
+            if(cs.getHost().equals(serverHostFromClient) && (cs.getPort()==serverPort)){
+                cs.setSelf(true);
+                foundSelf.set(true);
+            }
+        }
+        return foundSelf.get();
+    }    
     
     private void startServer() {
         new Thread(this.server).start();
@@ -84,11 +84,11 @@ public class DistributedManager {
             if(Utl.areBlank(hostPort)) throw new Exception("Cluster member blank, invalid cluster config");
             String [] hostAndPort = hostPort.split(":");
             if(hostAndPort.length < 2) throw new Exception("Invalid cluster member: " + hostPort);
-            clusterServers.add(new ClusterServer(hostAndPort[0], hostAndPort[1]));
+            clusterServers.add(new DistributedConfigServer(hostAndPort[0], hostAndPort[1]));
         }
         
         boolean match = false;
-        for(ClusterServer cs : clusterServers){
+        for(DistributedConfigServer cs : clusterServers){
             if(cs.getPort() == this.serverPort){
                 match = true;
                 break;
