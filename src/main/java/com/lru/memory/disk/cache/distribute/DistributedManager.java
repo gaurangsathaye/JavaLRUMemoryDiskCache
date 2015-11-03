@@ -84,7 +84,7 @@ public class DistributedManager {
             if(Utl.areBlank(hostPort)) throw new Exception("Cluster member blank, invalid cluster config");
             String [] hostAndPort = hostPort.split(":");
             if(hostAndPort.length < 2) throw new Exception("Invalid cluster member: " + hostPort);
-            clusterServers.add(new ClusterServer(hostAndPort[0].toLowerCase(), hostAndPort[1]));
+            clusterServers.add(new ClusterServer(hostAndPort[0], hostAndPort[1]));
         }
         
         boolean match = false;
@@ -104,6 +104,7 @@ public class DistributedManager {
     
     private void createCacheMap(AbstractCacheService<? extends Serializable>... caches) {
         for(AbstractCacheService<? extends Serializable> cache : caches){
+            try{cache.setDistributedManager(this);}catch(Exception e){}
             cacheMap.put(cache.getCacheName(), cache);
         }
     }

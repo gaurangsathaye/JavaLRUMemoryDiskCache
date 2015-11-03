@@ -13,10 +13,10 @@ public class ClusterServer {
     private AtomicBoolean self = new AtomicBoolean(false);
     
     public ClusterServer(String host, String port) throws Exception{
-        if(Utl.areBlank(host)) throw new Exception("host is blank");
-        this.host = host;
+        if(Utl.areBlank(host, port)) throw new Exception("host and/or port is blank");
+        this.host = host.trim().toLowerCase();
         try{
-            this.port = Integer.parseInt(port);
+            this.port = Integer.parseInt(port.trim());
         }catch(Exception e){
             throw new Exception("Invalid cluster port: " + port);
         }

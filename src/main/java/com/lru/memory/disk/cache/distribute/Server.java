@@ -24,6 +24,7 @@ public class Server implements Runnable {
     public void startServer() throws IOException {
         try{
             this.serverSocket = new ServerSocket(port);
+            p("server started on port: " + port);
             while(true){
                 try{
                     this.threadPool.execute(new ServerRequestProcessor(serverSocket.accept(), this.distributedManager));
@@ -45,4 +46,8 @@ public class Server implements Runnable {
             throw new RuntimeException(err, e);
         }
     }  
+    
+    static void p(Object o){
+        System.out.println(o);
+    }
 }

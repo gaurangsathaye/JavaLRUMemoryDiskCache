@@ -1,10 +1,17 @@
 package com.lru.memory.disk.cache;
 
+import com.lru.memory.disk.cache.distribute.ClientServerRequestResponse;
+import com.lru.memory.disk.cache.distribute.ClusterServer;
+import com.lru.memory.disk.cache.distribute.DistributedManager;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
+import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -35,6 +42,8 @@ public abstract class AbstractCacheService<T> implements DirLocate {
     private boolean persist;
     private String dataDir;
     private CacheLockManager lockMgr;
+    private DistributedManager distMgr;
+    private boolean distributed;
 
     public AbstractCacheService(String cacheName, int cacheSize) throws Exception {
         this(cacheName, cacheSize, false, null);
@@ -69,10 +78,14 @@ public abstract class AbstractCacheService<T> implements DirLocate {
 
     public T get(String key) throws Exception {
         if(Utl.areBlank(key)) throw new Exception("key is blank");
+        
+        if(this.distributed && (null != this.distMgr)){
+            
+        }
+        
         Map<String, Object> map = internalGetOnly(key, true);
         boolean fromDisk = (Boolean) map.get(KeyInternalGetFromDisk);
         T o = (T) map.get(KeyInternalGetCachedObj);
-        //p("Key: " + key + ", try from disk: " + fromDisk + ", obj from internalGetOnly: " + (null != o));
         if (isCacheItemValidInternal(o)) {            
             //Lazy load disk objects into memory
             if(fromDisk){                
@@ -80,34 +93,24 @@ public abstract class AbstractCacheService<T> implements DirLocate {
             }
             return o;
         }
-        return putWithLookup(key);
+        return internalPutWithLookup(key);
     }
 
     public T putWithLookup(String key) throws Exception {
-        ReentrantReadWriteLock.WriteLock ldWriteLock = this.lockMgr.getLock(key.hashCode()).writeLock();
-        ldWriteLock.lock();
-        T o = ((T) internalGetOnly(key, false).get(KeyInternalGetCachedObj));
-        try {
-            if (! isCacheItemValidInternal(o)) {
-                o = loadData(key);
-                if (null == o) {
-                    throw new Exception("Key: " + key + " - Null values not allowed");
-                }
-                internalPutOnly(key, o, true);
-            }
-            return o;
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            ldWriteLock.unlock();
-        }
+        if(this.distributed) throw new Exception("This method is not allowed in distributed configuration"); 
+
+        return internalPutWithLookup(key);
     }
 
     public void putOnly(String key, T o) throws Exception {
+        if(this.distributed) throw new Exception("This method is not allowed in distributed configuration"); 
+
         internalPutOnly(key, o, true);
     }
     
     public T getOnly(String key) throws Exception {
+        if(this.distributed) throw new Exception("This method is not allowed in distributed configuration"); 
+
         return ((T) internalGetOnly(key, true).get(KeyInternalGetCachedObj));
     }
     
@@ -152,6 +155,26 @@ public abstract class AbstractCacheService<T> implements DirLocate {
     }
     //End DirLocate impl
     
+    
+    private T internalPutWithLookup(String key) throws Exception {
+        ReentrantReadWriteLock.WriteLock ldWriteLock = this.lockMgr.getLock(key.hashCode()).writeLock();
+        ldWriteLock.lock();
+        T o = ((T) internalGetOnly(key, false).get(KeyInternalGetCachedObj));
+        try {
+            if (! isCacheItemValidInternal(o)) {
+                o = loadData(key);
+                if (null == o) {
+                    throw new Exception("Key: " + key + " - Null values not allowed");
+                }
+                internalPutOnly(key, o, true);
+            }
+            return o;
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            ldWriteLock.unlock();
+        }
+    }
     
     private boolean isCacheItemValidInternal(T o) {
         try{
@@ -286,7 +309,63 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         return null;
     }
     
+    //Distributed
+    public void setDistributedManager(DistributedManager dm) throws Exception {
+        if(null == dm) throw new Exception("Distributed Manager is null");
+        this.distMgr = dm;
+        this.distributed = true;
+    }
+    
+    /*
+    static void tSocketClient(String key) throws Exception {        
+        InputStream is = null;
+        OutputStream os = null;
+        
+        ObjectOutputStream oos = null;
+        ObjectInputStream ois = null;
+
+        Socket clientSock = null;
+
+        AutoCloseable closeables[] = {is, os, oos, ois, clientSock};
+        try {
+            ClusterServer clusterServer = distMgr.getClusterServerForCacheKey(key);
+            p("client: key: " + key + ", cluster server: " + clusterServer.toString());
+            if(clusterServer.isSelf()){
+                p("key: " + key + ", get from jvm");
+            }else{
+                p("key: " + key + ", get from remote");
+            }
+            
+            p("create client sock: " + clusterServer.getHost() + ", " + clusterServer.getPort());
+            clientSock = new Socket(clusterServer.getHost(), clusterServer.getPort());
+            ClientServerRequestResponse<Serializable> cssr = new ClientServerRequestResponse<>(clusterServer.getHost(), key, cache.getCacheName());
+            
+            os = clientSock.getOutputStream();
+            oos = new ObjectOutputStream(os);
+            oos.writeObject(cssr);
+            oos.flush(); 
+            
+            is = clientSock.getInputStream();
+            ois = new ObjectInputStream(is);
+            ClientServerRequestResponse<Serializable> resp = (ClientServerRequestResponse<Serializable>) ois.readObject();
+            p("resp getClientSetCacheKey: " + resp.getClientSetCacheKey());
+            p("resp: getClientSetCacheName: " + resp.getClientSetCacheName());
+            p("resp: getClientSetServerHost: " + resp.getClientSetServerHost());
+            p("resp: getServerErrorMessage: " + resp.getServerErrorMessage());
+            p("resp: data: " + resp.getServerSetData().toString());
+            p("resp: serverError: " + resp.isServerError());
+            p("resp: serverResponse: " + resp.isServerResponse());
+            p("-----");p(" ");
+        } catch (Exception e) {
+            p("error: sendDataToServer: " + e);
+        } finally {
+            Utl.closeAll(closeables);
+        }
+    }*/
+    
+    
     /*static void p(Object o){
       System.out.println(o);
     }*/
-} //end class
+    
+}

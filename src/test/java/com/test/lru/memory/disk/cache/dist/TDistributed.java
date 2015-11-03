@@ -30,6 +30,7 @@ public class TDistributed {
             td.distribute();
         }catch(Exception e){
             p("err: " + e + " : cause: " + e.getCause());
+            System.exit(0);
         }
     }
 
@@ -45,13 +46,19 @@ public class TDistributed {
         p("start distribute");
         Cache cache = new Cache("mycache", 10);
         
-        String clusterConfig = "127.0.0.1:18081";
+        String clusterConfig = "127.0.0.1:18082, 127.0.0.1:18081";
         
         Distributor.distribute(18081, clusterConfig, cache);
+        Distributor.distribute(18082, clusterConfig, cache);
         
-        DistributedManager distMgr = Distributor.getDistMgr(18081);
+        DistributedManager distMgr = Distributor.getDistMgr(18082);
         tSocketClient(distMgr, "key1", cache);
         tSocketClient(distMgr, "key1", cache);
+        
+        tSocketClient(distMgr, "key2", cache);
+        tSocketClient(distMgr, "key3", cache);
+        tSocketClient(distMgr, "key4", cache);
+        tSocketClient(distMgr, "key5", cache);
         
         System.exit(0);
     }
@@ -69,8 +76,14 @@ public class TDistributed {
         AutoCloseable closeables[] = {is, os, oos, ois, clientSock};
         try {
             ClusterServer clusterServer = distMgr.getClusterServerForCacheKey(key);
-            p("client: key: " + key + ", cluster server: " + clusterServer.toString());            
+            p("client: key: " + key + ", cluster server: " + clusterServer.toString());
+            if(clusterServer.isSelf()){
+                p("key: " + key + ", get from jvm");
+            }else{
+                p("key: " + key + ", get from remote");
+            }
             
+            p("create client sock: " + clusterServer.getHost() + ", " + clusterServer.getPort());
             clientSock = new Socket(clusterServer.getHost(), clusterServer.getPort());
             ClientServerRequestResponse<Serializable> cssr = new ClientServerRequestResponse<>(clusterServer.getHost(), key, cache.getCacheName());
             
