@@ -1,5 +1,6 @@
 package com.lru.memory.disk.cache;
 
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -40,5 +41,32 @@ import java.util.concurrent.atomic.AtomicBoolean;
     @Override
     public String toString() {
         return "ClusterServer{" + "host=" + host + ", port=" + port + ", self=" + self.get() + '}';
-    }   
+    } 
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final DistributedConfigServer other = (DistributedConfigServer) obj;
+        if (!Objects.equals(this.host, other.host)) {
+            return false;
+        }
+        if (this.port != other.port) {
+            return false;
+        }
+        if (!Objects.equals(this.self, other.self)) {
+            return false;
+        }
+        return true;
+    } 
 }

@@ -1,7 +1,5 @@
 package com.lru.memory.disk.cache;
 
-import com.lru.memory.disk.cache.AbstractCacheService;
-import com.lru.memory.disk.cache.Utl;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -96,10 +94,20 @@ public class DistributedManager {
         }
         if(! match){
             throw new Exception("No items in Cluster config: " + this.clusterConfig + ", contain server port: " + this.serverPort);
-        }
+        }       
         
         this.numberOfClusterServers = clusterServers.size();
         if(this.numberOfClusterServers < 1) throw new Exception("Number of created clusters servers from cluster config: " + this.clusterConfig + ", is invalid: " + this.numberOfClusterServers);
+        
+        for(int i=0;i<clusterServers.size();i++){
+            for(int j=i+1; j<clusterServers.size(); j++){
+                DistributedConfigServer f = clusterServers.get(i);
+                DistributedConfigServer s = clusterServers.get(j);
+                if(f.equals(s)){
+                    throw new Exception("Duplicate cluster servers in cluster config: " + f);
+                }
+            }
+        }
     }
     
     private void createCacheMap(AbstractCacheService<? extends Serializable>... caches) {

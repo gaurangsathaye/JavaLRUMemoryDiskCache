@@ -24,7 +24,7 @@ class DistributedServer implements Runnable {
     void startServer() throws IOException {
         try{
             this.serverSocket = new ServerSocket(port);
-            p("server started on port: " + port);
+            p("DistributedServer started on port: " + port);
             while(true){
                 try{
                     this.threadPool.execute(new DistributedServerRequestProcessor(serverSocket.accept(), this.distributedManager));
