@@ -12,7 +12,8 @@ import java.net.Socket;
  *
  * @author sathayeg
  */
-class DistributedServerRequestProcessor implements Runnable {    
+class DistributedServerRequestProcessor implements Runnable {
+    
     private final Socket clientSocket;
     private final DistributedManager distMgr;
     
@@ -37,12 +38,40 @@ class DistributedServerRequestProcessor implements Runnable {
             DistributedRequestResponse<Serializable> distrr = (DistributedRequestResponse<Serializable>) ois.readObject();
             String cacheKey = distrr.getClientSetCacheKey();
             String cacheName = distrr.getClientSetCacheName();
-            String serverHost = distrr.getClientSetServerHost();
+            String clientSetServerHost = distrr.getClientSetServerHost();
+            int clientSetServerPort = distrr.getClientSetServerPort();
+                        
+            boolean sendError = false;
             
-            distrr.setServerResponse(true);
+            if( (! sendError) && Utl.areBlank(cacheKey, cacheName, clientSetServerHost)){
+                distrr.setServerSetErrorMessage("cacheKey, cacheName or serverHost is blank");
+                distrr.setServerSetErrorLevel(DistributedServer.ServerErrorLevelBadRequest);                
+                sendError = true;                
+            }
             
-            if(Utl.areBlank(cacheKey, cacheName, serverHost)){
-                distrr.setServerErrorMessage("cacheKey, cacheName or serverHost is blank");
+            if((! sendError) && (! this.distMgr.getFoundSelf()) &&  (! this.distMgr.setSelfOnClusterServers(clientSetServerHost)) ){
+                distrr.setServerSetErrorLevel(DistributedServer.ServerErrorLevelSevere_SelfIdentification);
+                distrr.setServerSetErrorMessage("Unable to self detect for serverHost, possible config errors on: " + clientSetServerHost);                
+                sendError = true;
+            }else{
+                distrr.setServerSetServerId(this.distMgr.getSelfServer().toString());
+            }
+            
+            AbstractCacheService<? extends Serializable> cache = this.distMgr.getCacheMap().get(cacheName);
+            if( (! sendError) && (null == cache) ){
+                distrr.setServerSetErrorLevel(DistributedServer.ServerErrorLevelSevere_CacheNameDoesNotExist);
+                distrr.setServerSetErrorMessage("Cache for cache name: " + cacheName + " is null on: " + clientSetServerHost);                
+                sendError = true;
+            }
+            
+            DistributedConfigServer serverSideClusterServerForCacheKey = this.distMgr.getClusterServerForCacheKey(cacheKey);
+            if( (! sendError) && (! serverSideClusterServerForCacheKey.toString().equals(DistributedConfigServer.getServerId(clientSetServerHost, clientSetServerPort))) ){
+                distrr.setServerSetErrorLevel(DistributedServer.ServerErrorLevelSevere_ClientServerDontMatchForKey);
+                distrr.setServerSetErrorMessage("Cache for cache name: " + cacheName + " is null on: " + clientSetServerHost);                
+                sendError = true;
+            }
+            
+            if(sendError){
                 os = clientSocket.getOutputStream();
                 oos = new ObjectOutputStream(os);
                 oos.writeObject(distrr);
@@ -50,18 +79,11 @@ class DistributedServerRequestProcessor implements Runnable {
                 return;
             }
             
-            if( (! this.distMgr.getFoundSelf()) &&  (! this.distMgr.setSelfOnClusterServers(serverHost)) ){
-                distrr.setServerError(true);
-                distrr.setServerErrorMessage("Unable to self detect for serverHost: " + serverHost);
-                os = clientSocket.getOutputStream();
-                oos = new ObjectOutputStream(os);
-                oos.writeObject(distrr);
-                oos.flush();
-                return;
+            try{
+               cache.getNonDistributed(cacheKey);
+            }catch(Exception e){
+                
             }
-            
-            distrr.setServerId(this.distMgr.getSelfServer().toString());
-            distrr.setServerSetData(this.distMgr.getCacheMap().get(cacheName).getNonDistributed(cacheKey));
             
             os = clientSocket.getOutputStream();
             oos = new ObjectOutputStream(os);

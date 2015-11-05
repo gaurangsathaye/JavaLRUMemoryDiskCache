@@ -105,7 +105,8 @@ public class DistributedManager {
         try {            
             clientSock = new Socket(clusterServerForCacheKey.getHost(), clusterServerForCacheKey.getPort());
             DistributedRequestResponse<Serializable> distrr = 
-                    new DistributedRequestResponse<>(clusterServerForCacheKey.getHost(), key, cacheName);
+                    new DistributedRequestResponse<>(clusterServerForCacheKey.getHost(), clusterServerForCacheKey.getPort(),
+                            key, cacheName);
             
             os = clientSock.getOutputStream();
             oos = new ObjectOutputStream(os);

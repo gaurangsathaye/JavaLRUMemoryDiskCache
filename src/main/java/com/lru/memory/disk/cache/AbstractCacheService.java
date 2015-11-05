@@ -73,18 +73,20 @@ public abstract class AbstractCacheService<T> implements DirLocate {
     }
 
     public T get(String key) throws Exception {
-        if(Utl.areBlank(key)) throw new Exception("key is blank");
+        if(Utl.areBlank(key)) throw new Exception("key is blank");        
         
         if(this.distributed && (null != this.distMgr)){
             try{
                 DistributedConfigServer clusterServerForCacheKey = this.distMgr.getClusterServerForCacheKey(key);
-                DistributedRequestResponse<Serializable> distrr = this.distMgr.distributedCacheGet(cacheName, key, clusterServerForCacheKey);
-                p("distrr for key: " + key + " :: " + distrr.toString());
-                if( (! distrr.isServerError()) && (null != distrr.getServerSetData()) ){
-                    return ((T) distrr.getServerSetData());
-                }
+                if(! clusterServerForCacheKey.isSelf()){
+                    p("do distributed reqeust for key: " + key + ", remote server: " + clusterServerForCacheKey.toString());
+                    DistributedRequestResponse<Serializable> distrr = this.distMgr.distributedCacheGet(cacheName, key, clusterServerForCacheKey);
+                    p("distrr for key: " + key + " :: " + distrr.toString());
+                }else{
+                    p("no distributed request, server for key: " + key + ", is self: " + clusterServerForCacheKey.toString());
+                }             
             }catch(Exception e){
-                p("AbstractCacheService.get: dist get: " + e);
+                p("error: distributed get: key: " + key + " :: " + e);
             }
         }
         

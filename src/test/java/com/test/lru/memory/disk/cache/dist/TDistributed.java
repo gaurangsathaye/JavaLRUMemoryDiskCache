@@ -85,7 +85,9 @@ public class TDistributed {
             
             p("create client sock: " + clusterServer.getHost() + ", " + clusterServer.getPort());
             clientSock = new Socket(clusterServer.getHost(), clusterServer.getPort());
-            DistributedRequestResponse<Serializable> cssr = new DistributedRequestResponse<>(clusterServer.getHost(), key, cache.getCacheName());
+            DistributedRequestResponse<Serializable> cssr = 
+                    new DistributedRequestResponse<>(clusterServer.getHost(), clusterServer.getPort(),
+                            key, cache.getCacheName());
             
             os = clientSock.getOutputStream();
             oos = new ObjectOutputStream(os);
@@ -95,13 +97,7 @@ public class TDistributed {
             is = clientSock.getInputStream();
             ois = new ObjectInputStream(is);
             DistributedRequestResponse<Serializable> resp = (DistributedRequestResponse<Serializable>) ois.readObject();
-            p("resp getClientSetCacheKey: " + resp.getClientSetCacheKey());
-            p("resp: getClientSetCacheName: " + resp.getClientSetCacheName());
-            p("resp: getClientSetServerHost: " + resp.getClientSetServerHost());
-            p("resp: getServerErrorMessage: " + resp.getServerErrorMessage());
-            p("resp: data: " + resp.getServerSetData().toString());
-            p("resp: serverError: " + resp.isServerError());
-            p("resp: serverResponse: " + resp.isServerResponse());
+            p(resp.toString());
             p("-----");p(" ");
         } catch (Exception e) {
             p("error: sendDataToServer: " + e);

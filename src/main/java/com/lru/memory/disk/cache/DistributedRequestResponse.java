@@ -11,20 +11,40 @@ public class DistributedRequestResponse<T extends Serializable> implements Seria
     private static final long serialVersionUID = 1L;
     
     private final String clientSetServerHost;
+    private final int clientSetServerPort;
     private final String clientSetCacheKey;
     private final String clientSetCacheName;
     
     private T serverSetData;
-    private boolean serverError = false;
-    private boolean serverResponse = false;
-    private String serverErrorMessage;
-    private String serverId;
+    private byte serverSetErrorLevel = DistributedServer.ServerErrorLevelNotSet;
+    private String serverSetErrorMessage;
+    private String serverSetServerId;
+    private String serverSetServerToHandleKey;
     
-    public DistributedRequestResponse(String clientSetServerHost, String clientSetCacheKey, String clientSetCacheName){
+    
+    public DistributedRequestResponse(String clientSetServerHost, int clientSetServerPort,
+            String clientSetCacheKey, String clientSetCacheName){
         this.clientSetServerHost = clientSetServerHost;
+        this.clientSetServerPort = clientSetServerPort;
         this.clientSetCacheKey = clientSetCacheKey;
         this.clientSetCacheName = clientSetCacheName;
     }
+
+    public String getClientSetServerHost() {
+        return clientSetServerHost;
+    }
+
+    public int getClientSetServerPort() {
+        return clientSetServerPort;
+    }
+
+    public String getClientSetCacheKey() {
+        return clientSetCacheKey;
+    }
+
+    public String getClientSetCacheName() {
+        return clientSetCacheName;
+    }    
 
     public T getServerSetData() {
         return serverSetData;
@@ -34,52 +54,40 @@ public class DistributedRequestResponse<T extends Serializable> implements Seria
         this.serverSetData = serverSetData;
     }
 
-    public String getClientSetServerHost() {
-        return clientSetServerHost;
+    public byte getServerSetErrorLevel() {
+        return serverSetErrorLevel;
     }
 
-    public String getClientSetCacheKey() {
-        return clientSetCacheKey;
+    public void setServerSetErrorLevel(byte serverSetErrorLevel) {
+        this.serverSetErrorLevel = serverSetErrorLevel;
     }
 
-    public String getClientSetCacheName() {
-        return clientSetCacheName;
+    public String getServerSetErrorMessage() {
+        return serverSetErrorMessage;
     }
 
-    public boolean isServerError() {
-        return serverError;
+    public void setServerSetErrorMessage(String serverSetErrorMessage) {
+        this.serverSetErrorMessage = serverSetErrorMessage;
     }
 
-    public void setServerError(boolean serverError) {
-        this.serverError = serverError;
-    }   
-
-    public boolean isServerResponse() {
-        return serverResponse;
+    public String getServerSetServerId() {
+        return serverSetServerId;
     }
 
-    public void setServerResponse(boolean serverResponse) {
-        this.serverResponse = serverResponse;
-    }  
-
-    public String getServerErrorMessage() {
-        return serverErrorMessage;
+    public void setServerSetServerId(String serverSetServerId) {
+        this.serverSetServerId = serverSetServerId;
     }
 
-    public void setServerErrorMessage(String serverErrorMessage) {
-        this.serverErrorMessage = serverErrorMessage;
+    public String getServerSetServerToHandleKey() {
+        return serverSetServerToHandleKey;
     }
 
-    public String getServerId() {
-        return serverId;
-    }
-
-    public void setServerId(String serverId) {
-        this.serverId = serverId;
+    public void setServerSetServerToHandleKey(String serverSetServerToHandleKey) {
+        this.serverSetServerToHandleKey = serverSetServerToHandleKey;
     }
 
     @Override
     public String toString() {
-        return "DistributedRequestResponse{" + "clientSetServerHost=" + clientSetServerHost + ", clientSetCacheKey=" + clientSetCacheKey + ", clientSetCacheName=" + clientSetCacheName + ", serverSetData=" + serverSetData + ", serverError=" + serverError + ", serverResponse=" + serverResponse + ", serverErrorMessage=" + serverErrorMessage + ", serverId=" + serverId + '}';
-    }
+        return "DistributedRequestResponse{" + "clientSetServerHost=" + clientSetServerHost + ", clientSetServerPort=" + clientSetServerPort + ", clientSetCacheKey=" + clientSetCacheKey + ", clientSetCacheName=" + clientSetCacheName + ", serverSetErrorLevel=" + serverSetErrorLevel + ", serverSetErrorMessage=" + serverSetErrorMessage + ", serverSetServerId=" + serverSetServerId + ", serverSetServerToHandleKey=" + serverSetServerToHandleKey + '}';
+    }    
 }
