@@ -79,8 +79,8 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         
         DistributedConfigServer clusterServerForCacheKey = null;
         if(this.distributed && (null != this.distMgr)){
-            try{
-                clusterServerForCacheKey = this.distMgr.getClusterServerForCacheKey(key);
+            clusterServerForCacheKey = this.distMgr.getClusterServerForCacheKey(key);
+            try{                
                 if(! clusterServerForCacheKey.isSelf()){
                     p("do distributed reqeust for key: " + key + ", remote server: " + clusterServerForCacheKey.toString());
                     DistributedRequestResponse<Serializable> distrr = this.distMgr.distributedCacheGet(cacheName, key, clusterServerForCacheKey);
