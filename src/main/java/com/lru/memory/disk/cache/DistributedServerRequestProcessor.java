@@ -42,7 +42,6 @@ class DistributedServerRequestProcessor implements Runnable {
             distrr.setServerResponse(true);
             
             if(Utl.areBlank(cacheKey, cacheName, serverHost)){
-                distrr.setServerError(true);
                 distrr.setServerErrorMessage("cacheKey, cacheName or serverHost is blank");
                 os = clientSocket.getOutputStream();
                 oos = new ObjectOutputStream(os);
