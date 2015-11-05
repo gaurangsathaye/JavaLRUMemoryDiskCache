@@ -62,7 +62,7 @@ class DistributedServerRequestProcessor implements Runnable {
             }
             
             distrr.setServerId(this.distMgr.getSelfServer().toString());
-            distrr.setServerSetData("");
+            distrr.setServerSetData(this.distMgr.getCacheMap().get(cacheName).getNonDistributed(cacheKey));
             
             os = clientSocket.getOutputStream();
             oos = new ObjectOutputStream(os);
