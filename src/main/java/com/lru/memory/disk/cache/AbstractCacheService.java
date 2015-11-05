@@ -1,6 +1,8 @@
 package com.lru.memory.disk.cache;
 
+import static com.lru.memory.disk.cache.Utl.p;
 import com.lru.memory.disk.cache.exceptions.InvalidCacheConfigurationException;
+import com.lru.memory.disk.cache.exceptions.LoadDataIsNullException;
 import com.lru.memory.disk.cache.exceptions.LruCacheSerializationException;
 import java.io.File;
 import java.io.FileInputStream;
@@ -75,13 +77,27 @@ public abstract class AbstractCacheService<T> implements DirLocate {
     public T get(String key) throws Exception {
         if(Utl.areBlank(key)) throw new Exception("key is blank");        
         
+        DistributedConfigServer clusterServerForCacheKey = null;
         if(this.distributed && (null != this.distMgr)){
             try{
-                DistributedConfigServer clusterServerForCacheKey = this.distMgr.getClusterServerForCacheKey(key);
+                clusterServerForCacheKey = this.distMgr.getClusterServerForCacheKey(key);
                 if(! clusterServerForCacheKey.isSelf()){
                     p("do distributed reqeust for key: " + key + ", remote server: " + clusterServerForCacheKey.toString());
                     DistributedRequestResponse<Serializable> distrr = this.distMgr.distributedCacheGet(cacheName, key, clusterServerForCacheKey);
                     p("distrr for key: " + key + " :: " + distrr.toString());
+                    
+                    Serializable serverSetData = distrr.getServerSetData();
+                    if(null != serverSetData){
+                        try{
+                            T t = ((T) serverSetData);
+                            p("successfull cast of remote data for key: " + key);
+                            return t;
+                        }catch(Exception e){
+                            p("Unable to case remote data for key: " + key);
+                        }
+                    }else{
+                        throw new LoadDataIsNullException("Distributed get value is null for key: " + key, null);
+                    }
                 }else{
                     p("no distributed request, server for key: " + key + ", is self: " + clusterServerForCacheKey.toString());
                 }             
@@ -177,7 +193,7 @@ public abstract class AbstractCacheService<T> implements DirLocate {
             if (! isCacheItemValidInternal(o)) {
                 o = loadData(key);
                 if (null == o) {
-                    throw new Exception("Key: " + key + " - Null values not allowed");
+                    throw new LoadDataIsNullException("Key: " + key + " - Null values not allowed", null);
                 }
                 internalPutOnly(key, o, true);
             }
@@ -327,10 +343,5 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         if(null == dm) throw new Exception("Distributed Manager is null");
         this.distMgr = dm;
         this.distributed = true;
-    }
-    
-    static void p(Object o){
-      System.out.println(o);
-    }
-    
+    }    
 }

@@ -1,12 +1,13 @@
 package com.lru.memory.disk.cache;
 
-import com.lru.memory.disk.cache.Utl;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.net.Socket;
+
+import static com.lru.memory.disk.cache.Utl.p;
 
 /**
  *
@@ -64,10 +65,12 @@ class DistributedServerRequestProcessor implements Runnable {
                 sendError = true;
             }
             
-            DistributedConfigServer serverSideClusterServerForCacheKey = this.distMgr.getClusterServerForCacheKey(cacheKey);
-            if( (! sendError) && (! serverSideClusterServerForCacheKey.toString().equals(DistributedConfigServer.getServerId(clientSetServerHost, clientSetServerPort))) ){
+            distrr.setServerSetServerToHandleKey(this.distMgr.getClusterServerForCacheKey(cacheKey).toString());
+            String clientServerIdForKey = DistributedConfigServer.getServerId(clientSetServerHost, clientSetServerPort);
+            if( (! sendError) && (! distrr.getServerSetServerToHandleKey().equals(clientServerIdForKey) ) ){
                 distrr.setServerSetErrorLevel(DistributedServer.ServerErrorLevelSevere_ClientServerDontMatchForKey);
-                distrr.setServerSetErrorMessage("Cache for cache name: " + cacheName + " is null on: " + clientSetServerHost);                
+                distrr.setServerSetErrorMessage("cache key: " + cacheKey + ", client serverId for key: " + clientServerIdForKey +
+                        ", server serverId for key: " + distrr.getServerSetServerToHandleKey());                
                 sendError = true;
             }
             
@@ -80,9 +83,12 @@ class DistributedServerRequestProcessor implements Runnable {
             }
             
             try{
-               cache.getNonDistributed(cacheKey);
+                distrr.setServerSetData(cache.getNonDistributed(cacheKey));
+                distrr.setServerSetErrorLevel(DistributedServer.ServerErrorLevelCacheGetAllOk);
             }catch(Exception e){
-                
+                p("DistributedServerRequestProcessor: error getNonDistributed key: " + cacheKey + " : " + e);
+                distrr.setServerSetData(null);
+                distrr.setServerSetErrorLevel(DistributedServer.ServerErrorLevelCacheGetException);
             }
             
             os = clientSocket.getOutputStream();
@@ -93,5 +99,5 @@ class DistributedServerRequestProcessor implements Runnable {
         }finally{
             Utl.closeAll(closeables);
         }
-    }   
+    }
 }
