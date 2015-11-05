@@ -18,6 +18,7 @@ public class DistributedRequestResponse<T extends Serializable> implements Seria
     private boolean serverError = false;
     private boolean serverResponse = false;
     private String serverErrorMessage;
+    private String serverId;
     
     public DistributedRequestResponse(String clientSetServerHost, String clientSetCacheKey, String clientSetCacheName){
         this.clientSetServerHost = clientSetServerHost;
@@ -67,5 +68,18 @@ public class DistributedRequestResponse<T extends Serializable> implements Seria
 
     public void setServerErrorMessage(String serverErrorMessage) {
         this.serverErrorMessage = serverErrorMessage;
-    }   
+    }
+
+    public String getServerId() {
+        return serverId;
+    }
+
+    public void setServerId(String serverId) {
+        this.serverId = serverId;
+    }
+
+    @Override
+    public String toString() {
+        return "DistributedRequestResponse{" + "clientSetServerHost=" + clientSetServerHost + ", clientSetCacheKey=" + clientSetCacheKey + ", clientSetCacheName=" + clientSetCacheName + ", serverSetData=" + serverSetData + ", serverError=" + serverError + ", serverResponse=" + serverResponse + ", serverErrorMessage=" + serverErrorMessage + ", serverId=" + serverId + '}';
+    }
 }

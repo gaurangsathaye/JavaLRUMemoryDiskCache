@@ -40,13 +40,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
     @Override
     public String toString() {
-        return "ClusterServer{" + "host=" + host + ", port=" + port + ", self=" + self.get() + '}';
-    } 
-
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        return hash;
+        return getServerId(host, port);
+    }
+    
+    public static String getServerId(String host, int port){
+        if(Utl.areBlank(host)) return null;
+        return (host.trim().toLowerCase() + ":" + port);
     }
 
     @Override

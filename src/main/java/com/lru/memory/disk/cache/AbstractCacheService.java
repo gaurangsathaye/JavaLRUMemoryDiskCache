@@ -5,12 +5,9 @@ import com.lru.memory.disk.cache.exceptions.LruCacheSerializationException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.io.Serializable;
-import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -79,8 +76,23 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         if(Utl.areBlank(key)) throw new Exception("key is blank");
         
         if(this.distributed && (null != this.distMgr)){
-            
+            try{
+                DistributedConfigServer clusterServerForCacheKey = this.distMgr.getClusterServerForCacheKey(key);
+                DistributedRequestResponse<Serializable> distrr = this.distMgr.distributedCacheGet(cacheName, key, clusterServerForCacheKey);
+                p("distrr for key: " + key + " :: " + distrr.toString());
+                if( (! distrr.isServerError()) && (null != distrr.getServerSetData()) ){
+                    return ((T) distrr.getServerSetData());
+                }
+            }catch(Exception e){
+                p("AbstractCacheService.get: dist get: " + e);
+            }
         }
+        
+        return getNonDistributed(key);
+    }
+    
+    T getNonDistributed(String key) throws Exception {
+        if(Utl.areBlank(key)) throw new Exception("key is blank");
         
         Map<String, Object> map = internalGetOnly(key, true);
         boolean fromDisk = (Boolean) map.get(KeyInternalGetFromDisk);
@@ -315,56 +327,8 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         this.distributed = true;
     }
     
-    /*
-    static void tSocketClient(String key) throws Exception {        
-        InputStream is = null;
-        OutputStream os = null;
-        
-        ObjectOutputStream oos = null;
-        ObjectInputStream ois = null;
-
-        Socket clientSock = null;
-
-        AutoCloseable closeables[] = {is, os, oos, ois, clientSock};
-        try {
-            ClusterServer clusterServer = distMgr.getClusterServerForCacheKey(key);
-            p("client: key: " + key + ", cluster server: " + clusterServer.toString());
-            if(clusterServer.isSelf()){
-                p("key: " + key + ", get from jvm");
-            }else{
-                p("key: " + key + ", get from remote");
-            }
-            
-            p("create client sock: " + clusterServer.getHost() + ", " + clusterServer.getPort());
-            clientSock = new Socket(clusterServer.getHost(), clusterServer.getPort());
-            ClientServerRequestResponse<Serializable> cssr = new ClientServerRequestResponse<>(clusterServer.getHost(), key, cache.getCacheName());
-            
-            os = clientSock.getOutputStream();
-            oos = new ObjectOutputStream(os);
-            oos.writeObject(cssr);
-            oos.flush(); 
-            
-            is = clientSock.getInputStream();
-            ois = new ObjectInputStream(is);
-            ClientServerRequestResponse<Serializable> resp = (ClientServerRequestResponse<Serializable>) ois.readObject();
-            p("resp getClientSetCacheKey: " + resp.getClientSetCacheKey());
-            p("resp: getClientSetCacheName: " + resp.getClientSetCacheName());
-            p("resp: getClientSetServerHost: " + resp.getClientSetServerHost());
-            p("resp: getServerErrorMessage: " + resp.getServerErrorMessage());
-            p("resp: data: " + resp.getServerSetData().toString());
-            p("resp: serverError: " + resp.isServerError());
-            p("resp: serverResponse: " + resp.isServerResponse());
-            p("-----");p(" ");
-        } catch (Exception e) {
-            p("error: sendDataToServer: " + e);
-        } finally {
-            Utl.closeAll(closeables);
-        }
-    }*/
-    
-    
-    /*static void p(Object o){
+    static void p(Object o){
       System.out.println(o);
-    }*/
+    }
     
 }

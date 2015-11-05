@@ -34,38 +34,39 @@ class DistributedServerRequestProcessor implements Runnable {
         try{            
             is = clientSocket.getInputStream();           
             ois = new ObjectInputStream(is);
-            DistributedRequestResponse<Serializable> csrr = (DistributedRequestResponse<Serializable>) ois.readObject();
-            String cacheKey = csrr.getClientSetCacheKey();
-            String cacheName = csrr.getClientSetCacheName();
-            String serverHost = csrr.getClientSetServerHost();
+            DistributedRequestResponse<Serializable> distrr = (DistributedRequestResponse<Serializable>) ois.readObject();
+            String cacheKey = distrr.getClientSetCacheKey();
+            String cacheName = distrr.getClientSetCacheName();
+            String serverHost = distrr.getClientSetServerHost();
+            
+            distrr.setServerResponse(true);
             
             if(Utl.areBlank(cacheKey, cacheName, serverHost)){
-                csrr.setServerError(true);
-                csrr.setServerErrorMessage("cacheKey, cacheName or serverHost is blank");
+                distrr.setServerError(true);
+                distrr.setServerErrorMessage("cacheKey, cacheName or serverHost is blank");
                 os = clientSocket.getOutputStream();
                 oos = new ObjectOutputStream(os);
-                oos.writeObject(csrr);
+                oos.writeObject(distrr);
                 oos.flush();
                 return;
             }
             
             if( (! this.distMgr.getFoundSelf()) &&  (! this.distMgr.setSelfOnClusterServers(serverHost)) ){
-                csrr.setServerError(true);
-                csrr.setServerErrorMessage("Unable to self detect for serverHost: " + serverHost);
+                distrr.setServerError(true);
+                distrr.setServerErrorMessage("Unable to self detect for serverHost: " + serverHost);
                 os = clientSocket.getOutputStream();
                 oos = new ObjectOutputStream(os);
-                oos.writeObject(csrr);
+                oos.writeObject(distrr);
                 oos.flush();
                 return;
             }
             
-            DistributedConfigServer clusterServer = this.distMgr.getClusterServerForCacheKey(cacheKey);
-            csrr.setServerSetData(clusterServer.toString());
-            csrr.setServerResponse(true);
+            distrr.setServerId(this.distMgr.getSelfServer().toString());
+            distrr.setServerSetData("");
             
             os = clientSocket.getOutputStream();
             oos = new ObjectOutputStream(os);
-            oos.writeObject(csrr);
+            oos.writeObject(distrr);
             oos.flush(); 
         }catch(Exception e){
         }finally{
