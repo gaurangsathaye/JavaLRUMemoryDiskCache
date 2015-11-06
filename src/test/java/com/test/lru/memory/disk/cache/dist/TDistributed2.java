@@ -32,10 +32,10 @@ public class TDistributed2 {
         
         String clusterConfig = "127.0.0.1:19000, 127.0.0.1:19001";
         
-        Distributor.distribute(19000, clusterConfig, cache2);
-        Distributor.distribute(19001, clusterConfig, cache1);
+        Distributor.distribute(19000, clusterConfig, cache1);
+        Distributor.distribute(19001, clusterConfig, cache2);
         
-        for(int a=0;a<2;a++){
+        for(int a=0;a<3;a++){
             for(Cache cache : cacheList){
                 for(int i=0;i<2;i++){
                     String val1 = cache.get("key1");
@@ -45,8 +45,13 @@ public class TDistributed2 {
                     p("val2: " + val2);
                     p("-----" ); p(" ");
                 }
-                p("-----" ); p(" ");p("-----" ); p(" ");
+                p("\n===============\n" );
             }
+            if(1 == a){
+                p("sleep to get past network errors");
+                try{Thread.sleep(2200);}catch(Exception e){}
+            }
+            p("\n" + a + " : *********************\n");
         }
         
         System.exit(0);
