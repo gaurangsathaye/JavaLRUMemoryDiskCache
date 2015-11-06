@@ -5,6 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -103,7 +104,10 @@ public class DistributedManager {
 
         AutoCloseable closeables[] = {is, os, oos, ois, clientSock};
         try {            
-            clientSock = new Socket(clusterServerForCacheKey.getHost(), clusterServerForCacheKey.getPort());
+            //clientSock = new Socket(clusterServerForCacheKey.getHost(), clusterServerForCacheKey.getPort());
+            clientSock = new Socket();
+            clientSock.connect(new InetSocketAddress(clusterServerForCacheKey.getHost(), clusterServerForCacheKey.getPort()), 2);
+            clientSock.setSoTimeout(5);
             DistributedRequestResponse<Serializable> distrr = 
                     new DistributedRequestResponse<>(clusterServerForCacheKey.getHost(), clusterServerForCacheKey.getPort(),
                             key, cacheName);
