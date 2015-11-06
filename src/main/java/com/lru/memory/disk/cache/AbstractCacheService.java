@@ -93,7 +93,7 @@ public abstract class AbstractCacheService<T> implements DirLocate {
                             p("successfull cast of remote data for key: " + key);
                             return t;
                         }catch(Exception e){
-                            p("Unable to case remote data for key: " + key);
+                            p("Unable to cast remote data for key: " + key);
                         }
                     }else{
                         throw new LoadDataIsNullException("Distributed get value is null for key: " + key, null);
