@@ -11,10 +11,11 @@ import java.util.concurrent.Executors;
  */
 class DistributedServer implements Runnable {
     
-    public static final byte ServerErrorLevelSevere_CacheNameDoesNotExist = 27;
-    public static final byte ServerErrorLevelSevere_SelfIdentification = 26;
-    public static final byte ServerErrorLevelSevere_ClientServerDontMatchForKey = 25; //If the distributed server the client thinks should serve this key does not match the distributed server the server thinks should handle this key.
-    public static final byte ServerErrorLevelBadRequest = 10;
+    public static final byte ServerErrorLevelSevere_CacheNameDoesNotExist = 23;
+    public static final byte ServerErrorLevelSevere_SelfIdentification = 22;
+    public static final byte ServerErrorLevelSevere_ClientServerDontMatchForKey = 21; //If the distributed server the client thinks should serve this key does not match the distributed server the server thinks should handle this key.
+    public static final byte ServerErrorLevelSevere = 20;
+    public static final byte ServerErrorLevelBadRequest = 7;
     public static final byte ServerErrorLevelCacheGetException = 2;
     public static final byte ServerErrorLevelCacheGetAllOk = 1;
     public static final byte ServerErrorLevelNotSet = 0;

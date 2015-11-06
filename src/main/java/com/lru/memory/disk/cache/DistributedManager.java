@@ -1,5 +1,7 @@
 package com.lru.memory.disk.cache;
 
+import com.lru.memory.disk.cache.exceptions.BadRequestException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -7,6 +9,7 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,8 +49,8 @@ public class DistributedManager {
         startServer();
     }
     
-    public DistributedConfigServer getClusterServerForCacheKey(String key) throws Exception{
-        if(Utl.areBlank(key)) throw new Exception("key is blank");
+    public DistributedConfigServer getClusterServerForCacheKey(String key) throws BadRequestException{
+        if(Utl.areBlank(key)) throw new BadRequestException("key is blank", null);
         return clusterServers.get((Math.abs(key.hashCode()) % this.numberOfClusterServers));
     }
     
@@ -91,9 +94,9 @@ public class DistributedManager {
     
     
     DistributedRequestResponse<Serializable> distributedCacheGet(String cacheName, String key, 
-            DistributedConfigServer clusterServerForCacheKey) throws Exception {  
-        if(Utl.areBlank(cacheName, key)) throw new Exception("DistributedManger.distributedCacheGet: cacheName, key is blank");
-        if(null == clusterServerForCacheKey) throw new Exception("clusterServerForCacheKey is null");
+            DistributedConfigServer clusterServerForCacheKey) throws BadRequestException, SocketException, IOException, ClassNotFoundException { 
+        if(Utl.areBlank(cacheName, key)) throw new BadRequestException("DistributedManger.distributedCacheGet: cacheName, key is blank", null);
+        if(null == clusterServerForCacheKey) throw new BadRequestException("clusterServerForCacheKey is null", null);
         InputStream is = null;
         OutputStream os = null;
         
@@ -121,8 +124,6 @@ public class DistributedManager {
             ois = new ObjectInputStream(is);
             DistributedRequestResponse<Serializable> resp = (DistributedRequestResponse<Serializable>) ois.readObject();
             return resp;
-        } catch (Exception e) {
-            throw e;
         } finally {
             Utl.closeAll(closeables);
         }

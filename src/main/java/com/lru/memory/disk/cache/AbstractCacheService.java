@@ -1,15 +1,18 @@
 package com.lru.memory.disk.cache;
 
 import static com.lru.memory.disk.cache.Utl.p;
+import com.lru.memory.disk.cache.exceptions.BadRequestException;
 import com.lru.memory.disk.cache.exceptions.InvalidCacheConfigurationException;
 import com.lru.memory.disk.cache.exceptions.LoadDataIsNullException;
 import com.lru.memory.disk.cache.exceptions.LruCacheSerializationException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.net.SocketException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -21,7 +24,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @param <T>
  */
 public abstract class AbstractCacheService<T> implements DirLocate {
-    
+
     private static final String KeyInternalGetFromDisk = "f";
     private static final String KeyInternalGetCachedObj = "o";
     private static final int NumberDiskShards = 1000;
@@ -46,11 +49,15 @@ public abstract class AbstractCacheService<T> implements DirLocate {
     public AbstractCacheService(String cacheName, int cacheSize) throws Exception {
         this(cacheName, cacheSize, false, null);
     }
-    
-    public AbstractCacheService(String cacheName, int cacheSize, boolean diskPersist, String dataDirectory) throws InvalidCacheConfigurationException, Exception{
-        if(Utl.areBlank(cacheName) || cacheSize < 1) throw new InvalidCacheConfigurationException("cacheName and/or cacheSize invalid", null);
-        if(diskPersist && Utl.areBlank(dataDirectory) ) throw new InvalidCacheConfigurationException("Invalid data directory", null);
-        this.cacheName = cacheName.trim();        
+
+    public AbstractCacheService(String cacheName, int cacheSize, boolean diskPersist, String dataDirectory) throws InvalidCacheConfigurationException, Exception {
+        if (Utl.areBlank(cacheName) || cacheSize < 1) {
+            throw new InvalidCacheConfigurationException("cacheName and/or cacheSize invalid", null);
+        }
+        if (diskPersist && Utl.areBlank(dataDirectory)) {
+            throw new InvalidCacheConfigurationException("Invalid data directory", null);
+        }
+        this.cacheName = cacheName.trim();
         this.lock = new ReentrantReadWriteLock();
         this.statsHits = new AtomicLong(0L);
         this.statsHitsDisk = new AtomicLong(0L);
@@ -58,66 +65,105 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         this.statsMisses = new AtomicLong(0L);
         this.cacheSize = cacheSize;
         this.statsMap = new HashMap<>();
-        this.persist = diskPersist;        
+        this.persist = diskPersist;
         this.cache = new LRUCache<>(cacheSize, this);
         this.lockMgr = new CacheLockManager(ConcurrencyLevel);
-        if(this.persist) {
+        if (this.persist) {
             this.dataDir = dataDirectory.trim().replaceAll("/$", "");
             init();
         }
     }
 
     public abstract boolean isCacheItemValid(T o);
+
     public abstract T loadData(String key) throws Exception;
-    
-    public String getCacheName(){
+
+    public String getCacheName() {
         return this.cacheName;
     }
 
-    public T get(String key) throws Exception {
-        if(Utl.areBlank(key)) throw new Exception("key is blank");        
-        
-        DistributedConfigServer clusterServerForCacheKey = null;
-        if(this.distributed && (null != this.distMgr)){
-            clusterServerForCacheKey = this.distMgr.getClusterServerForCacheKey(key);
-            try{                
-                if(! clusterServerForCacheKey.isSelf()){
-                    p("do distributed reqeust for key: " + key + ", remote server: " + clusterServerForCacheKey.toString());
-                    DistributedRequestResponse<Serializable> distrr = this.distMgr.distributedCacheGet(cacheName, key, clusterServerForCacheKey);
-                    p("distrr for key: " + key + " :: " + distrr.toString());
-                    
-                    Serializable serverSetData = distrr.getServerSetData();
-                    if(null != serverSetData){
-                        try{
-                            T t = ((T) serverSetData);
-                            p("successfull cast of remote data for key: " + key);
-                            return t;
-                        }catch(Exception e){
-                            p("Unable to cast remote data for key: " + key);
-                        }
-                    }else{
-                        throw new LoadDataIsNullException("Distributed get value is null for key: " + key, null);
-                    }
-                }else{
-                    p("no distributed request, server for key: " + key + ", is self: " + clusterServerForCacheKey.toString());
-                }             
-            }catch(Exception e){
-                p("error: distributed get: key: " + key + " :: " + e);
-            }
+    public T get(String key) throws Exception {//throws Exception {
+        if (Utl.areBlank(key)) {
+            throw new BadRequestException("key is blank", null);
         }
-        
+
+        if (this.distributed && (null != this.distMgr)) {
+
+        }
+
         return getNonDistributed(key);
     }
-    
+
+    Map<String, Object> getDistributed(String key) throws LoadDataIsNullException, BadRequestException {
+        Map<String, Object> map = new HashMap<>();
+        String keyDoLocal = "dolocal";
+        map.put(keyDoLocal, false);
+
+        DistributedConfigServer clusterServerForCacheKey = null;
+        try {
+            if (Utl.areBlank(key)) {
+                throw new BadRequestException("key is blank", null);
+            }
+
+            clusterServerForCacheKey = this.distMgr.getClusterServerForCacheKey(key);
+            boolean tryRemote = clusterServerForCacheKey.tryRemote();
+            boolean isSelf = clusterServerForCacheKey.isSelf();
+            p("distributed request info: server for key: " + key + ", cluster server: "
+                    + clusterServerForCacheKey.toString() + ", isSelf: " + isSelf + ", tryRemote: " + tryRemote);
+
+            if (isSelf || (!tryRemote)) {
+                map.put(keyDoLocal, true);
+                return map;
+            }
+
+            DistributedRequestResponse<Serializable> distrr = this.distMgr.distributedCacheGet(cacheName, key, clusterServerForCacheKey);
+            p("distrr for key: " + key + " :: " + distrr.toString());
+
+            if (distrr.getServerSetErrorLevel() >= DistributedServer.ServerErrorLevelSevere) {
+                clusterServerForCacheKey.setSevereErrorNextAttemptTimestamp();
+                map.put(keyDoLocal, true);
+                return map;
+            }
+
+            Serializable serverSetData = distrr.getServerSetData();
+            if (null != serverSetData) {
+                try {
+                    T t = ((T) serverSetData);
+                    map.put("obj", t);
+                    return map;
+                } catch (Exception e) {
+                    p("Unable to cast remote data for key: " + key);
+                    clusterServerForCacheKey.setSevereErrorNextAttemptTimestamp();
+                    map.put(keyDoLocal, true);
+                    return map;
+                }
+            } else {
+                throw new LoadDataIsNullException("Distributed get value is null for key: " + key, null);
+            }
+
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (SocketException e) {
+
+        } catch (IOException e) {
+
+        } catch (ClassNotFoundException e) {
+
+        }
+
+    }
+
     T getNonDistributed(String key) throws Exception {
-        if(Utl.areBlank(key)) throw new Exception("key is blank");
-        
+        if (Utl.areBlank(key)) {
+            throw new Exception("key is blank");
+        }
+
         Map<String, Object> map = internalGetOnly(key, true);
         boolean fromDisk = (Boolean) map.get(KeyInternalGetFromDisk);
         T o = (T) map.get(KeyInternalGetCachedObj);
-        if (isCacheItemValidInternal(o)) {            
+        if (isCacheItemValidInternal(o)) {
             //Lazy load disk objects into memory
-            if(fromDisk){                
+            if (fromDisk) {
                 internalPutOnly(key, o, false); //false because we don't want to re-serialize a deserialized object, this is to lazy load to memory
             }
             return o;
@@ -126,23 +172,29 @@ public abstract class AbstractCacheService<T> implements DirLocate {
     }
 
     public T putWithLookup(String key) throws Exception {
-        if(this.distributed) throw new Exception("This method is not allowed in distributed configuration"); 
+        if (this.distributed) {
+            throw new Exception("This method is not allowed in distributed configuration");
+        }
 
         return internalPutWithLookup(key);
     }
 
     public void putOnly(String key, T o) throws Exception {
-        if(this.distributed) throw new Exception("This method is not allowed in distributed configuration"); 
+        if (this.distributed) {
+            throw new Exception("This method is not allowed in distributed configuration");
+        }
 
         internalPutOnly(key, o, true);
     }
-    
+
     public T getOnly(String key) throws Exception {
-        if(this.distributed) throw new Exception("This method is not allowed in distributed configuration"); 
+        if (this.distributed) {
+            throw new Exception("This method is not allowed in distributed configuration");
+        }
 
         return ((T) internalGetOnly(key, true).get(KeyInternalGetCachedObj));
     }
-    
+
     public final Map<String, Object> getStats() {
         long hits = statsHits.get();
         long misses = statsMisses.get();
@@ -158,8 +210,8 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         statsMap.put("cacheCurrentSize", cache.size());
         return statsMap;
     }
-    
-    public void clear() throws Exception {        
+
+    public void clear() throws Exception {
         lock.writeLock().lock();
         try {
             cache.clear();
@@ -168,29 +220,32 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         } finally {
             lock.writeLock().unlock();
         }
-    } 
-    
+    }
+
     //Start DirLocate impl
     @Override
     public String getPathToFile(String key) throws Exception {
-        if(! isDiskPersistent()) return null;
-        if(Utl.areBlank(key)) throw new Exception("key: " + key + " : invalid");
+        if (!isDiskPersistent()) {
+            return null;
+        }
+        if (Utl.areBlank(key)) {
+            throw new Exception("key: " + key + " : invalid");
+        }
         return this.dataDir + "/" + (Math.abs(key.hashCode()) % NumberDiskShards) + "/" + Utl.sha256(key);
-    }   
+    }
 
     @Override
     public boolean isDiskPersistent() {
         return this.persist;
     }
     //End DirLocate impl
-    
-    
+
     private T internalPutWithLookup(String key) throws Exception {
         ReentrantReadWriteLock.WriteLock ldWriteLock = this.lockMgr.getLock(key.hashCode()).writeLock();
         ldWriteLock.lock();
         T o = ((T) internalGetOnly(key, false).get(KeyInternalGetCachedObj));
         try {
-            if (! isCacheItemValidInternal(o)) {
+            if (!isCacheItemValidInternal(o)) {
                 o = loadData(key);
                 if (null == o) {
                     throw new LoadDataIsNullException("Key: " + key + " - Null values not allowed", null);
@@ -204,32 +259,36 @@ public abstract class AbstractCacheService<T> implements DirLocate {
             ldWriteLock.unlock();
         }
     }
-    
+
     private boolean isCacheItemValidInternal(T o) {
-        try{
+        try {
             return isCacheItemValid(o);
-        }catch(Exception e){
+        } catch (Exception e) {
             return false;
         }
     }
-    
+
     private void init() throws Exception {
         File dir = new File(this.dataDir);
-        if(dir.exists() && dir.isFile()) throw new Exception("data dir: " + this.dataDir + ", is a file, should be a directory");
-        if(! dir.exists()){
+        if (dir.exists() && dir.isFile()) {
+            throw new Exception("data dir: " + this.dataDir + ", is a file, should be a directory");
+        }
+        if (!dir.exists()) {
             dir.mkdirs();
         }
-        
-        for(int i=0;i < NumberDiskShards;i++){
+
+        for (int i = 0; i < NumberDiskShards; i++) {
             File shardDir = new File(dir, Integer.toString(i));
-            if(shardDir.exists() && shardDir.isDirectory()) continue;
-            if(shardDir.exists() && (! shardDir.isDirectory())){
-                shardDir.delete();         
+            if (shardDir.exists() && shardDir.isDirectory()) {
+                continue;
+            }
+            if (shardDir.exists() && (!shardDir.isDirectory())) {
+                shardDir.delete();
             }
             shardDir.mkdir();
         }
     }
-    
+
     private void internalPutOnly(String key, T o, boolean overridePersist) throws Exception {
         if (null == o) {
             throw new Exception("Key: " + key + " - Null values not allowed");
@@ -242,20 +301,23 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         } finally {
             lock.writeLock().unlock();
         }
-    }   
-        
+    }
+
     private Map<String, Object> internalGetOnly(String key, boolean doStats) throws Exception {
         lock.readLock().lock();
         try {
             Map<String, Object> map = internalGet(key);
-            if(doStats){
+            if (doStats) {
                 boolean tryDisk = (Boolean) map.get(KeyInternalGetFromDisk);
                 T t = (T) map.get(KeyInternalGetCachedObj);
-                if(null != t){
+                if (null != t) {
                     statsHits.incrementAndGet();
-                    if(tryDisk) statsHitsDisk.incrementAndGet();
-                    else statsHitsMemory.incrementAndGet();
-                }else{
+                    if (tryDisk) {
+                        statsHitsDisk.incrementAndGet();
+                    } else {
+                        statsHitsMemory.incrementAndGet();
+                    }
+                } else {
                     statsMisses.incrementAndGet();
                 }
             }
@@ -266,82 +328,99 @@ public abstract class AbstractCacheService<T> implements DirLocate {
             lock.readLock().unlock();
         }
     }
-    
-    private Map<String, Object> internalGet(String key) throws Exception{  
+
+    private Map<String, Object> internalGet(String key) throws Exception {
         Map<String, Object> map = new HashMap<>();
-        try{
+        try {
             T t = cache.get(key);
-            if(persist && (null == t)){
+            if (persist && (null == t)) {
                 //long start = System.currentTimeMillis();
                 t = deserialize(key);
                 //long end = System.currentTimeMillis() - start;
                 //if(end > 200) p(key + ", deserialize time: " + end);
-                map.put(KeyInternalGetFromDisk, true);                
-            }else{
+                map.put(KeyInternalGetFromDisk, true);
+            } else {
                 map.put(KeyInternalGetFromDisk, false);
             }
-            map.put(KeyInternalGetCachedObj, t);            
+            map.put(KeyInternalGetCachedObj, t);
             return map;
-        }catch(Exception e){
+        } catch (Exception e) {
             throw e;
         }
     }
-    
-    private void internalPut(String key, T t, boolean overridePersist) throws Exception{        
-        try{
+
+    private void internalPut(String key, T t, boolean overridePersist) throws Exception {
+        try {
             cache.put(key, t);
-            if(persist && overridePersist){
+            if (persist && overridePersist) {
                 //long start = System.currentTimeMillis();
                 serialize(key, t);
                 //long end = System.currentTimeMillis() - start;
                 //if(end > 200) p(key + ", serialize time: " + end);
             }
-        }catch(Exception e){
+        } catch (Exception e) {
             throw e;
         }
     }
-    
-    private void serialize(String key, T t) throws LruCacheSerializationException{
+
+    private void serialize(String key, T t) throws LruCacheSerializationException {
         FileOutputStream fos = null;
         ObjectOutputStream oos = null;
-        try{
+        try {
             fos = new FileOutputStream(this.getPathToFile(key), false);
             oos = new ObjectOutputStream(fos);
             oos.writeObject(t);
-        }catch(Exception e){
+        } catch (Exception e) {
             throw new LruCacheSerializationException("Unable to serialize key: " + key, e);
-        }finally{
-            try{fos.close();}catch(Exception e){}
-            try{oos.close();}catch(Exception e){}
+        } finally {
+            try {
+                fos.close();
+            } catch (Exception e) {
+            }
+            try {
+                oos.close();
+            } catch (Exception e) {
+            }
         }
     }
-    
-    private T deserialize(String key) throws Exception{
+
+    private T deserialize(String key) throws Exception {
         File f = new File(this.getPathToFile(key));
-        if(! f.exists()) return null;
+        if (!f.exists()) {
+            return null;
+        }
         FileInputStream fis = null;
         ObjectInputStream ois = null;
-        try{
+        try {
             fis = new FileInputStream(f);
             ois = new ObjectInputStream(fis);
-            return ( (T) ois.readObject() );
-        }catch(Exception e){
+            return ((T) ois.readObject());
+        } catch (Exception e) {
             //Don't throw any errors here, delete the existing file
             //This may have been due to deserialization incompatibilities from serial version uid or cached item code changes, etc.
-            try{
+            try {
                 f.delete();
-            }catch(Exception exd){}
-        }finally{
-            try{fis.close();}catch(Exception e){}
-            try{ois.close();}catch(Exception e){}
+            } catch (Exception exd) {
+            }
+        } finally {
+            try {
+                fis.close();
+            } catch (Exception e) {
+            }
+            try {
+                ois.close();
+            } catch (Exception e) {
+            }
         }
         return null;
     }
-    
+
     //Distributed
     void setDistributedManager(DistributedManager dm) throws Exception {
-        if(null == dm) throw new Exception("Distributed Manager is null");
+        if (null == dm) {
+            throw new Exception("Distributed Manager is null");
+        }
         this.distMgr = dm;
         this.distributed = true;
-    }    
+    }
 }

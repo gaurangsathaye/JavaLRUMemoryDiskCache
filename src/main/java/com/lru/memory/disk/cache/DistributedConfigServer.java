@@ -7,19 +7,41 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @author sathayeg
  */
- public class DistributedConfigServer {
+public class DistributedConfigServer {
+    
+    public static final long SevereServerErrorAttemptDelta = 5000L;
+    
     private final String host;
     private final int port;
     private AtomicBoolean self = new AtomicBoolean(false);
-    
-    public DistributedConfigServer(String host, String port) throws Exception{
-        if(Utl.areBlank(host, port)) throw new Exception("host and/or port is blank");
+    private long errNextAttemptTimestamp = 0L;
+
+    public DistributedConfigServer(String host, String port) throws Exception {
+        if (Utl.areBlank(host, port)) {
+            throw new Exception("host and/or port is blank");
+        }
         this.host = host.trim().toLowerCase();
-        try{
+        try {
             this.port = Integer.parseInt(port.trim());
-        }catch(Exception e){
+        } catch (Exception e) {
             throw new Exception("Invalid cluster port: " + port);
         }
+    }
+
+    public boolean tryRemote() {
+        return (System.currentTimeMillis() > errNextAttemptTimestamp);
+    }
+
+    public long getErrNextAttemptTimestamp() {
+        return errNextAttemptTimestamp;
+    }
+    
+    public void setSevereErrorNextAttemptTimestamp(){
+        this.errNextAttemptTimestamp = System.currentTimeMillis() + SevereServerErrorAttemptDelta;
+    }
+
+    public void setErrNextAttemptTimestamp(long errNextAttemptTimestamp) {
+        this.errNextAttemptTimestamp = errNextAttemptTimestamp;
     }
 
     public String getHost() {
@@ -28,7 +50,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
     public int getPort() {
         return port;
-    }   
+    }
 
     public boolean isSelf() {
         return self.get();
@@ -42,9 +64,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
     public String toString() {
         return getServerId(host, port);
     }
-    
-    public static String getServerId(String host, int port){
-        if(Utl.areBlank(host)) return null;
+
+    public static String getServerId(String host, int port) {
+        if (Utl.areBlank(host)) {
+            return null;
+        }
         return (host.trim().toLowerCase() + ":" + port);
     }
 
@@ -67,5 +91,5 @@ import java.util.concurrent.atomic.AtomicBoolean;
             return false;
         }
         return true;
-    } 
+    }
 }
