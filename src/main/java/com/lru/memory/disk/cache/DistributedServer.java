@@ -21,13 +21,14 @@ class DistributedServer implements Runnable {
     public static final byte ServerErrorLevelNotSet = 0;
         
     private ServerSocket serverSocket = null;
-    private final ExecutorService threadPool = Executors.newFixedThreadPool(10);
+    private ExecutorService threadPool = null;
     private final int port;   
     private final DistributedManager distributedManager;
 
     DistributedServer(int port, DistributedManager distributedManager) {
         this.port = port;
         this.distributedManager = distributedManager;
+        threadPool = Executors.newFixedThreadPool(this.distributedManager.getServerThreadPoolSize());
     }
 
     void startServer() throws IOException {

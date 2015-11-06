@@ -22,6 +22,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class DistributedManager {
     
+    private int serverThreadPoolSize = 200;
+    
     private int serverPort;
     private final List<DistributedConfigServer> clusterServers = new ArrayList<>();
     private final Map<String, DistributedConfigServer> clusterServerMap = new HashMap<>();
@@ -48,6 +50,15 @@ public class DistributedManager {
         this.server = new DistributedServer(serverPort, this);
         startServer();
     }
+
+    public int getServerThreadPoolSize() {
+        return serverThreadPoolSize;
+    }
+
+    public void setServerThreadPoolSize(int serverThreadPoolSize) {
+        if(serverThreadPoolSize < 1) return;
+        this.serverThreadPoolSize = serverThreadPoolSize;
+    }   
     
     public DistributedConfigServer getClusterServerForCacheKey(String key) throws BadRequestException{
         if(Utl.areBlank(key)) throw new BadRequestException("key is blank", null);
@@ -91,45 +102,7 @@ public class DistributedManager {
         
         return foundSelf.get();
     }
-    
-    
-    DistributedRequestResponse<Serializable> distributedCacheGet(String cacheName, String key, 
-            DistributedConfigServer clusterServerForCacheKey) throws BadRequestException, SocketException, IOException, ClassNotFoundException { 
-        if(Utl.areBlank(cacheName, key)) throw new BadRequestException("DistributedManger.distributedCacheGet: cacheName, key is blank", null);
-        if(null == clusterServerForCacheKey) throw new BadRequestException("clusterServerForCacheKey is null", null);
-        InputStream is = null;
-        OutputStream os = null;
-        
-        ObjectOutputStream oos = null;
-        ObjectInputStream ois = null;
-
-        Socket clientSock = null;
-
-        AutoCloseable closeables[] = {is, os, oos, ois, clientSock};
-        try {            
-            //clientSock = new Socket(clusterServerForCacheKey.getHost(), clusterServerForCacheKey.getPort());
-            clientSock = new Socket();
-            clientSock.connect(new InetSocketAddress(clusterServerForCacheKey.getHost(), clusterServerForCacheKey.getPort()), 2);
-            clientSock.setSoTimeout(5);
-            DistributedRequestResponse<Serializable> distrr = 
-                    new DistributedRequestResponse<>(clusterServerForCacheKey.getHost(), clusterServerForCacheKey.getPort(),
-                            key, cacheName);
-            
-            os = clientSock.getOutputStream();
-            oos = new ObjectOutputStream(os);
-            oos.writeObject(distrr);
-            oos.flush(); 
-            
-            is = clientSock.getInputStream();
-            ois = new ObjectInputStream(is);
-            DistributedRequestResponse<Serializable> resp = (DistributedRequestResponse<Serializable>) ois.readObject();
-            return resp;
-        } finally {
-            Utl.closeAll(closeables);
-        }
-    }
-    
-    
+      
     private void startServer() {
         new Thread(this.server).start();
     }
