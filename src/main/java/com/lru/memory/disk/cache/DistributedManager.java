@@ -158,7 +158,7 @@ public class DistributedManager {
         if(this.numberOfClusterServers < 1) throw new Exception("Number of created clusters servers from cluster config: " + this.clusterConfig + ", is invalid: " + this.numberOfClusterServers);
         
         for(DistributedConfigServer dcs : this.clusterServers){
-            String key = dcs.toString();
+            String key = dcs.getServerId();
             if(clusterServerMap.containsKey(key)) {
                 throw new Exception("Duplicate cluster servers in cluster config: " + key);
             }else{

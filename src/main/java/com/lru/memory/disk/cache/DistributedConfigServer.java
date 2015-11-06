@@ -2,6 +2,8 @@ package com.lru.memory.disk.cache;
 
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  *
@@ -9,12 +11,21 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class DistributedConfigServer {
     
-    public static final long SevereServerErrorAttemptDelta = 5000L;
+    public static final long SevereServerErrorAttemptDelta = 2000L;
+    public static final long NetworkErrorAttemptDelta = 1000L;
     
     private final String host;
     private final int port;
     private AtomicBoolean self = new AtomicBoolean(false);
     private long errNextAttemptTimestamp = 0L;
+    
+    private AtomicLong totalSevereErrors = new AtomicLong(0);
+    private AtomicInteger severeErrorsRotate = new AtomicInteger(0);
+    private int severeErrorRotateLimit = 5;
+    
+    private AtomicLong totalNetworkErrors = new AtomicLong(0);
+    private AtomicInteger networkErrorsRotate = new AtomicInteger(0);
+    private int networkErrorsRotateLimit = 5;
 
     public DistributedConfigServer(String host, String port) throws Exception {
         if (Utl.areBlank(host, port)) {
@@ -28,6 +39,20 @@ public class DistributedConfigServer {
         }
     }
 
+    @Override
+    public String toString() {
+        return getServerId() + ", self: " + self.get() + 
+                ", tryRemote: " + tryRemote() + 
+                ", totalSevereErr: " + totalSevereErrors.get() + 
+                ", totalNetworkErr: " + totalNetworkErrors.get();
+    }  
+    
+    
+    public static int rotate(AtomicInteger ai, int rotateIn) {
+        ai.set(((ai.get() % rotateIn) + 1));
+        return ai.get();
+    }
+
     public boolean tryRemote() {
         return (System.currentTimeMillis() > errNextAttemptTimestamp);
     }
@@ -37,13 +62,15 @@ public class DistributedConfigServer {
     }
     
     public void setSevereErrorNextAttemptTimestamp(){
-        this.errNextAttemptTimestamp = System.currentTimeMillis() + SevereServerErrorAttemptDelta;
+        totalSevereErrors.incrementAndGet();
+        this.errNextAttemptTimestamp = System.currentTimeMillis() + (SevereServerErrorAttemptDelta * rotate(severeErrorsRotate, severeErrorRotateLimit));
     }
-
-    public void setErrNextAttemptTimestamp(long errNextAttemptTimestamp) {
-        this.errNextAttemptTimestamp = errNextAttemptTimestamp;
+    
+    public void setNetworkErrorNextAttemptTimestamp(){
+        totalNetworkErrors.incrementAndGet();
+        this.errNextAttemptTimestamp = System.currentTimeMillis() + (NetworkErrorAttemptDelta * rotate(networkErrorsRotate, networkErrorsRotateLimit));
     }
-
+        
     public String getHost() {
         return host;
     }
@@ -60,8 +87,7 @@ public class DistributedConfigServer {
         this.self.set(self);
     }
 
-    @Override
-    public String toString() {
+    public String getServerId() {
         return getServerId(host, port);
     }
 
@@ -70,26 +96,5 @@ public class DistributedConfigServer {
             return null;
         }
         return (host.trim().toLowerCase() + ":" + port);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final DistributedConfigServer other = (DistributedConfigServer) obj;
-        if (!Objects.equals(this.host, other.host)) {
-            return false;
-        }
-        if (this.port != other.port) {
-            return false;
-        }
-        if (!Objects.equals(this.self, other.self)) {
-            return false;
-        }
-        return true;
-    }
+    }  
 }

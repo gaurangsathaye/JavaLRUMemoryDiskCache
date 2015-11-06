@@ -33,7 +33,6 @@ class DistributedServer implements Runnable {
     void startServer() throws IOException {
         try{
             this.serverSocket = new ServerSocket(port);
-            p("DistributedServer started on port: " + port);
             while(true){
                 try{
                     this.threadPool.execute(new DistributedServerRequestProcessor(serverSocket.accept(), this.distributedManager));
@@ -54,9 +53,5 @@ class DistributedServer implements Runnable {
             String err = "Unable to start server on port: " + port + " : " + e.getMessage() + ", cause: " + e.getCause();
             throw new RuntimeException(err, e);
         }
-    }  
-    
-    static void p(Object o){
-        System.out.println(o);
     }
 }

@@ -88,17 +88,15 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         }
 
         if (this.distributed && (null != this.distMgr)) {
-
+            T cachedObj = getDistributed(key);
+            if(null != cachedObj) return cachedObj;
         }
 
         return getNonDistributed(key);
     }
 
-    Map<String, Object> getDistributed(String key) throws LoadDataIsNullException, BadRequestException {
-        Map<String, Object> map = new HashMap<>();
-        String keyDoLocal = "dolocal";
-        map.put(keyDoLocal, false);
-
+    //Returns null or cached object or throws exceptions
+    T getDistributed(String key) throws LoadDataIsNullException, BadRequestException {      
         DistributedConfigServer clusterServerForCacheKey = null;
         try {
             if (Utl.areBlank(key)) {
@@ -106,14 +104,11 @@ public abstract class AbstractCacheService<T> implements DirLocate {
             }
 
             clusterServerForCacheKey = this.distMgr.getClusterServerForCacheKey(key);
-            boolean tryRemote = clusterServerForCacheKey.tryRemote();
-            boolean isSelf = clusterServerForCacheKey.isSelf();
-            p("distributed request info: server for key: " + key + ", cluster server: "
-                    + clusterServerForCacheKey.toString() + ", isSelf: " + isSelf + ", tryRemote: " + tryRemote);
+            p("distributed request info: server for key: " + key + 
+                    ", cluster server: "+ clusterServerForCacheKey.toString());
 
-            if (isSelf || (!tryRemote)) {
-                map.put(keyDoLocal, true);
-                return map;
+            if (clusterServerForCacheKey.isSelf() || (! clusterServerForCacheKey.tryRemote())) {
+                return null;
             }
 
             DistributedRequestResponse<Serializable> distrr = this.distMgr.distributedCacheGet(cacheName, key, clusterServerForCacheKey);
@@ -121,36 +116,36 @@ public abstract class AbstractCacheService<T> implements DirLocate {
 
             if (distrr.getServerSetErrorLevel() >= DistributedServer.ServerErrorLevelSevere) {
                 clusterServerForCacheKey.setSevereErrorNextAttemptTimestamp();
-                map.put(keyDoLocal, true);
-                return map;
+                return null;
             }
 
             Serializable serverSetData = distrr.getServerSetData();
             if (null != serverSetData) {
                 try {
-                    T t = ((T) serverSetData);
-                    map.put("obj", t);
-                    return map;
+                    return ((T) serverSetData);
                 } catch (Exception e) {
-                    p("Unable to cast remote data for key: " + key);
+                    p("error: Unable to cast remote data for key: " + key + " :: " + e);
                     clusterServerForCacheKey.setSevereErrorNextAttemptTimestamp();
-                    map.put(keyDoLocal, true);
-                    return map;
+                    return null;
                 }
             } else {
                 throw new LoadDataIsNullException("Distributed get value is null for key: " + key, null);
             }
 
         } catch (BadRequestException e) {
+            p("error: AbstractCacheService.getDistributed: key: " + key + " :: " + e);
             throw e;
         } catch (SocketException e) {
-
+            p("error: AbstractCacheService.getDistributed: key: " + key + " :: " + e);
+            clusterServerForCacheKey.setNetworkErrorNextAttemptTimestamp();
         } catch (IOException e) {
-
+            p("error: AbstractCacheService.getDistributed: key: " + key + " :: " + e);
+            clusterServerForCacheKey.setNetworkErrorNextAttemptTimestamp();
         } catch (ClassNotFoundException e) {
-
+            p("error: AbstractCacheService.getDistributed: key: " + key + " :: " + e);
+            clusterServerForCacheKey.setSevereErrorNextAttemptTimestamp();
         }
-
+        return null;
     }
 
     T getNonDistributed(String key) throws Exception {

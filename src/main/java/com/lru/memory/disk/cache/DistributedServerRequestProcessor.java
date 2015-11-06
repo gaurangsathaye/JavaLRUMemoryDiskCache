@@ -55,7 +55,7 @@ class DistributedServerRequestProcessor implements Runnable {
                 distrr.setServerSetErrorMessage("Unable to self detect for serverHost, possible config errors on: " + clientSetServerHost);                
                 sendError = true;
             }else{
-                distrr.setServerSetServerId(this.distMgr.getSelfServer().toString());
+                distrr.setServerSetServerId(this.distMgr.getSelfServer().getServerId());
             }
             
             AbstractCacheService<? extends Serializable> cache = this.distMgr.getCacheMap().get(cacheName);
@@ -65,7 +65,7 @@ class DistributedServerRequestProcessor implements Runnable {
                 sendError = true;
             }
             
-            distrr.setServerSetServerToHandleKey(this.distMgr.getClusterServerForCacheKey(cacheKey).toString());
+            distrr.setServerSetServerToHandleKey(this.distMgr.getClusterServerForCacheKey(cacheKey).getServerId());
             String clientServerIdForKey = DistributedConfigServer.getServerId(clientSetServerHost, clientSetServerPort);
             if( (! sendError) && (! distrr.getServerSetServerToHandleKey().equals(clientServerIdForKey) ) ){
                 distrr.setServerSetErrorLevel(DistributedServer.ServerErrorLevelSevere_ClientServerDontMatchForKey);
