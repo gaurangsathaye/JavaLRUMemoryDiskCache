@@ -206,6 +206,8 @@ public abstract class AbstractCacheService<T> implements DiskOps {
         statsMap.put("hitsDisk", statsHitsDisk.get());
         statsMap.put("hitsMemory", statsHitsMemory.get());
         statsMap.put("remoteSuccesses", this.statsRemoteSuccesses.get());
+        statsMap.put("remoteErrNetwork", this.statsRemoteNetworkErrs.get());
+        statsMap.put("remoteErrSevere", this.statsRemoteSevereErrs.get());
         statsMap.put("misses", misses);
         statsMap.put("hitratio",
                 (hits < 1) ? 0.0 : (((double) hits) / ((double) (hits + misses)))

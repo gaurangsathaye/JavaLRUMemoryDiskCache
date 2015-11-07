@@ -62,7 +62,7 @@ public class TDistributedThreads {
         while(true){
             if(ai.get() >= totalCount){
                 for(Cache cache : cacheList){
-                    p(cache.getStats());
+                    p(cache.getStats() + "\n");
                 }
                 System.exit(0);
             }else{
