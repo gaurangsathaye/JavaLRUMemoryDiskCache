@@ -4,7 +4,7 @@ package com.lru.memory.disk.cache;
  *
  * @author sathayeg
  */
-interface DirLocate  {
+interface DiskOps  {
     String getPathToFile(String key) throws Exception;
     boolean isDiskPersistent();
 }

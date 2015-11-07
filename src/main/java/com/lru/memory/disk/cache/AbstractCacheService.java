@@ -4,13 +4,8 @@ import static com.lru.memory.disk.cache.Utl.p;
 import com.lru.memory.disk.cache.exceptions.BadRequestException;
 import com.lru.memory.disk.cache.exceptions.InvalidCacheConfigurationException;
 import com.lru.memory.disk.cache.exceptions.LoadDataIsNullException;
-import com.lru.memory.disk.cache.exceptions.LruCacheSerializationException;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.SocketException;
 import java.util.HashMap;
@@ -23,14 +18,14 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @author sathayeg
  * @param <T>
  */
-public abstract class AbstractCacheService<T> implements DirLocate {
+public abstract class AbstractCacheService<T> implements DiskOps {
 
     private static final String KeyInternalGetFromDisk = "f";
     private static final String KeyInternalGetCachedObj = "o";
     private static final int NumberDiskShards = 1000;
-    private static final int ConcurrencyLevel = 100;
+    private static final int ConcurrencyLevel = 200;
 
-    protected LRUCache<String, T> cache;
+    private LRUCache<String, T> cache;
     private final ReentrantReadWriteLock lock;
 
     private final AtomicLong statsMisses;
@@ -217,7 +212,7 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         }
     }
 
-    //Start DirLocate impl
+    //Start DiskOps impl
     @Override
     public String getPathToFile(String key) throws Exception {
         if (!isDiskPersistent()) {
@@ -233,7 +228,7 @@ public abstract class AbstractCacheService<T> implements DirLocate {
     public boolean isDiskPersistent() {
         return this.persist;
     }
-    //End DirLocate impl
+    //End DiskOps impl
 
     private T internalPutWithLookup(String key) throws Exception {
         ReentrantReadWriteLock.WriteLock ldWriteLock = this.lockMgr.getLock(key.hashCode()).writeLock();
@@ -329,10 +324,9 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         try {
             T t = cache.get(key);
             if (persist && (null == t)) {
-                //long start = System.currentTimeMillis();
-                t = deserialize(key);
-                //long end = System.currentTimeMillis() - start;
-                //if(end > 200) p(key + ", deserialize time: " + end);
+                try{
+                    t = (T) (Utl.deserializeFile(this.getPathToFile(key)));
+                }catch(Exception e){}
                 map.put(KeyInternalGetFromDisk, true);
             } else {
                 map.put(KeyInternalGetFromDisk, false);
@@ -348,17 +342,15 @@ public abstract class AbstractCacheService<T> implements DirLocate {
         try {
             cache.put(key, t);
             if (persist && overridePersist) {
-                //long start = System.currentTimeMillis();
-                serialize(key, t);
-                //long end = System.currentTimeMillis() - start;
-                //if(end > 200) p(key + ", serialize time: " + end);
+                //serialize(key, t);
+                Utl.offerToGlobalExecutorService(new AsyncFileSerialize(this.getPathToFile(key), (Serializable) t));
             }
         } catch (Exception e) {
             throw e;
         }
     }
 
-    private void serialize(String key, T t) throws LruCacheSerializationException {
+    /*private void serialize(String key, T t) throws LruCacheSerializationException {
         FileOutputStream fos = null;
         ObjectOutputStream oos = null;
         try {
@@ -377,8 +369,9 @@ public abstract class AbstractCacheService<T> implements DirLocate {
             } catch (Exception e) {
             }
         }
-    }
-
+    }*/
+    
+    /*
     private T deserialize(String key) throws Exception {
         File f = new File(this.getPathToFile(key));
         if (!f.exists()) {
@@ -408,7 +401,7 @@ public abstract class AbstractCacheService<T> implements DirLocate {
             }
         }
         return null;
-    }
+    }*/
 
     //Distributed
     void setDistributedManager(DistributedManager dm) throws Exception {

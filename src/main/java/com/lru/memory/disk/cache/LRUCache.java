@@ -15,29 +15,26 @@ class LRUCache<K extends String, V> extends LinkedHashMap<K, V> {
     private static final long serialVersionUID = 1L;
     private static final float loadfactor = 0.75f;
     private final int cachesize;
-    private final DirLocate dirLocate;
+    private final DiskOps diskOps;
 
-    LRUCache(int cachesize, DirLocate dirLocate) {
+    LRUCache(int cachesize, DiskOps diskOps) {
         super((int) Math.ceil(cachesize / loadfactor), loadfactor, true);
         this.cachesize = cachesize;
-        this.dirLocate = dirLocate;
+        this.diskOps = diskOps;
     }
 
     @Override
     protected boolean removeEldestEntry(Entry<K, V> eldest) {        
         if(this.size() > this.cachesize){
-            if(this.dirLocate.isDiskPersistent()) deleteFromFilesystem(eldest);
+            if(this.diskOps.isDiskPersistent()) deleteFromFilesystem(eldest);
             return true;
         }        
         return false;
     }
     
     private void deleteFromFilesystem(Entry<K, V> eldest){
-        try{
-            File f = new File(this.dirLocate.getPathToFile(eldest.getKey()));
-            if(f.exists() && (! f.isDirectory())){
-                f.delete();
-            }
+        try{            
+            Utl.offerToGlobalExecutorService(new AsyncFileDelete(this.diskOps.getPathToFile(eldest.getKey())));
         }catch(Exception e){}
     }
 }

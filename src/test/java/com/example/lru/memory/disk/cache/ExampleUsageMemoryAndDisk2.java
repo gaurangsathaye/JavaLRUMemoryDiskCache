@@ -21,7 +21,7 @@ public class ExampleUsageMemoryAndDisk2 {
     public static void main(String[] args) {
         try {
             //For example, create cache that can be accessed by all parts of your code.
-            cache = new ExampleCache("ExampleCache1", 50000, true, dataDirectory, new ExampleDao());
+            cache = new ExampleCache("ExampleCache1", 2, true, dataDirectory, new ExampleDao());
                     //new ExampleCache("ExampleCache", 50000, new ExampleDao());
 
             //Use the cache
@@ -35,12 +35,12 @@ public class ExampleUsageMemoryAndDisk2 {
      Create the cache with the cache name and the number of items you want to keep in the cache.
      */
     static void runExample() throws Exception {
-        ExecutorService pool = Executors.newFixedThreadPool(300);
+        ExecutorService pool = Executors.newFixedThreadPool(3);
         
         final Map<String, AtomicInteger> map  = new HashMap<>();
         map.put("ct", new AtomicInteger(0));
         
-        int total = 30000;
+        int total = 8;
         
         long start = System.currentTimeMillis();
         for(int i=0;i<total;i++){
@@ -48,7 +48,7 @@ public class ExampleUsageMemoryAndDisk2 {
             pool.submit((new Callable<String>() {
                 @Override
                 public String call() throws Exception {
-                    int random = new Random().nextInt(3000);
+                    int random = new Random().nextInt(4);
                     String key = Integer.toString(random);
                     long start = System.currentTimeMillis();
                     long end = 0L;
@@ -56,14 +56,16 @@ public class ExampleUsageMemoryAndDisk2 {
                         //p("pre cache get: " + key);
                         cache.get(key);
                         end = System.currentTimeMillis() - start;
-                        //p("post cache get: " + key);
+                        p("post cache get: " + key);
                     }catch(Exception e){
                         p("Fatal: " + e + " : cause: " + e.getCause());
                     }
-                    if((id % (total/20)) == 0){
-                        p("time: " + end + ", done:" + id + " : " + key + " : " + cache.getStats() + cache.getPathToFile(key));
-                    }
+                    //if((id % (total/20)) == 0){
+                    p("time: " + end + ", done:" + id + " : " + key + " : " + cache.getStats() + cache.getPathToFile(key));
+                    //}
+                    
                     map.get("ct").incrementAndGet();
+                    p("incremented ct: " + map.get("ct").get());
                     return null;
                 }
             }));
