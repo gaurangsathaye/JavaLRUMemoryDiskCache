@@ -54,6 +54,9 @@ public class ExampleUsageMemoryAndDisk {
         p("Key object is on disk only, not in memory");
         cache.clear();
         p(" --- \n");
+        
+        p("Wait a couple of seconds for any async tasks");
+        try{Thread.sleep(2000);}catch(Exception e){}
 
         p("Key object retrieved from disk");
         cache.get(key);

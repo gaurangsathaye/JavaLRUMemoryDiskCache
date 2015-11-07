@@ -23,17 +23,21 @@ public class TDistributed2 {
    
     void distribute() throws Exception {
         p("start distribute");
-        Cache cache1 = new Cache("mycache", 10);
-        Cache cache2 = new Cache("mycache", 10);
+        Cache cache1 = new Cache("teaCache", 10, new Dao("server1"));
+        Cache cache2 = new Cache("teaCache", 10, new Dao("server2"));
+        Cache cache3 = new Cache("coffeeCache", 10, new Dao("server1"));
+        Cache cache4 = new Cache("coffeeCache", 10, new Dao("server2"));
         
         List<Cache> cacheList = new ArrayList<>();
         cacheList.add(cache1);
         cacheList.add(cache2);
+        cacheList.add(cache3);
+        cacheList.add(cache4);
         
         String clusterConfig = "127.0.0.1:19000, 127.0.0.1:19001";
         
-        Distributor.distribute(19000, clusterConfig, cache1);
-        Distributor.distribute(19001, clusterConfig, cache2);
+        Distributor.distribute(19000, clusterConfig, cache1, cache3);
+        Distributor.distribute(19001, clusterConfig, cache2, cache4);
         
         for(int a=0;a<3;a++){
             for(Cache cache : cacheList){
@@ -58,9 +62,11 @@ public class TDistributed2 {
     }   
     
     public class Cache extends AbstractCacheService<String> {
+        private final Dao dao;
 
-        public Cache(String cacheName, int cacheSize) throws Exception {
+        public Cache(String cacheName, int cacheSize, Dao dao) throws Exception {
             super(cacheName, cacheSize);
+            this.dao = dao;
         }
 
         @Override
@@ -70,11 +76,22 @@ public class TDistributed2 {
 
         @Override
         public String loadData(String key) throws Exception {
-            return ("data for key: " + key);
+            return this.dao.getData(key, this.getCacheName());
         }
         
     }
-
+    
+    class Dao {
+        private final String server;
+        public Dao(String server){
+            this.server = server;
+        }
+        
+        public String getData(String key, String cacheName){
+            return "data for key: " + key + ", cacheName: " + cacheName + ", server: " + server;
+        }
+    }
+    
     static void p(Object o) {
         System.out.println(o);
     }

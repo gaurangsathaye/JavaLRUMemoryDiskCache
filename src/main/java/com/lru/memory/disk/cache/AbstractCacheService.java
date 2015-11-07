@@ -32,6 +32,9 @@ public abstract class AbstractCacheService<T> implements DiskOps {
     private final AtomicLong statsHits;
     private final AtomicLong statsHitsDisk;
     private final AtomicLong statsHitsMemory;
+    private final AtomicLong statsRemoteSuccesses;
+    private final AtomicLong statsRemoteNetworkErrs;
+    private final AtomicLong statsRemoteSevereErrs;
     private final String cacheName;
     private final int cacheSize;
     private final Map<String, Object> statsMap;
@@ -58,6 +61,9 @@ public abstract class AbstractCacheService<T> implements DiskOps {
         this.statsHitsDisk = new AtomicLong(0L);
         this.statsHitsMemory = new AtomicLong(0L);
         this.statsMisses = new AtomicLong(0L);
+        this.statsRemoteSuccesses = new AtomicLong(0L);
+        this.statsRemoteNetworkErrs = new AtomicLong(0L);
+        this.statsRemoteSevereErrs = new AtomicLong(0L);
         this.cacheSize = cacheSize;
         this.statsMap = new HashMap<>();
         this.persist = diskPersist;
@@ -110,6 +116,7 @@ public abstract class AbstractCacheService<T> implements DiskOps {
             p("distrr for key: " + key + " :: " + distrr.toString());
 
             if (distrr.getServerSetErrorLevel() >= DistributedServer.ServerErrorLevelSevere) {
+                this.statsRemoteSevereErrs.incrementAndGet();
                 clusterServerForCacheKey.setSevereErrorNextAttemptTimestamp();
                 return null;
             }
@@ -117,13 +124,16 @@ public abstract class AbstractCacheService<T> implements DiskOps {
             Serializable serverSetData = distrr.getServerSetData();
             if (null != serverSetData) {
                 try {
+                    this.statsRemoteSuccesses.incrementAndGet();
                     return ((T) serverSetData);
                 } catch (Exception e) {
                     p("error: Unable to cast remote data for key: " + key + " :: " + e);
+                    this.statsRemoteSevereErrs.incrementAndGet();
                     clusterServerForCacheKey.setSevereErrorNextAttemptTimestamp();
                     return null;
                 }
             } else {
+                this.statsRemoteSuccesses.incrementAndGet();
                 throw new LoadDataIsNullException("Distributed get value is null for key: " + key, null);
             }
 
@@ -132,12 +142,15 @@ public abstract class AbstractCacheService<T> implements DiskOps {
             throw e;
         } catch (SocketException e) {
             p("error: AbstractCacheService.getDistributed: key: " + key + " :: " + e);
+            this.statsRemoteNetworkErrs.incrementAndGet();
             clusterServerForCacheKey.setNetworkErrorNextAttemptTimestamp();
         } catch (IOException e) {
             p("error: AbstractCacheService.getDistributed: key: " + key + " :: " + e);
+            this.statsRemoteNetworkErrs.incrementAndGet();
             clusterServerForCacheKey.setNetworkErrorNextAttemptTimestamp();
         } catch (ClassNotFoundException e) {
             p("error: AbstractCacheService.getDistributed: key: " + key + " :: " + e);
+            this.statsRemoteSevereErrs.incrementAndGet();
             clusterServerForCacheKey.setSevereErrorNextAttemptTimestamp();
         }
         return null;
@@ -192,6 +205,7 @@ public abstract class AbstractCacheService<T> implements DiskOps {
         statsMap.put("hits", hits);
         statsMap.put("hitsDisk", statsHitsDisk.get());
         statsMap.put("hitsMemory", statsHitsMemory.get());
+        statsMap.put("remoteSuccesses", this.statsRemoteSuccesses.get());
         statsMap.put("misses", misses);
         statsMap.put("hitratio",
                 (hits < 1) ? 0.0 : (((double) hits) / ((double) (hits + misses)))
