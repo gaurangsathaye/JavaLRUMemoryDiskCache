@@ -25,10 +25,10 @@ public class TDistributedThreads {
         }
     }
     
-    static int cacheSize = 100;
-    static int loopCount = 1000;
-    static int randomRange = 150;
-    static int threadPoolSize = 100;
+    static int cacheSize = 20000;
+    static int loopCount = 20000;
+    static int randomRange = 1000;
+    static int threadPoolSize = 400;
     void distribute() throws Exception {
         p("start distribute");
         Cache cache1 = new Cache("teaCache", cacheSize, true, "./datadir/server1/teacache", new Dao("server1"));
@@ -64,6 +64,7 @@ public class TDistributedThreads {
                 for(Cache cache : cacheList){
                     p(cache.getStats() + "\n");
                 }
+                try{Thread.sleep(10000);}catch(Exception e){}
                 System.exit(0);
             }else{
                 p("not done yet: done: " + ai.get() + ", totalCount: " + totalCount);

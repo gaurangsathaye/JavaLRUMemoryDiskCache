@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class DistributedConfigServer {
     
     public static final long SevereServerErrorAttemptDelta = 2000L;
-    public static final long NetworkErrorAttemptDelta = 1000L;
+    public static final long NetworkErrorAttemptDelta = 100L;
     
     private final String host;
     private final int port;

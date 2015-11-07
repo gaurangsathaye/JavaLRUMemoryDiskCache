@@ -33,8 +33,8 @@ public class DistributedClient {
         try {            
             //clientSock = new Socket(clusterServerForCacheKey.getHost(), clusterServerForCacheKey.getPort());
             clientSock = new Socket();
-            clientSock.connect(new InetSocketAddress(clusterServerForCacheKey.getHost(), clusterServerForCacheKey.getPort()), 2);
-            clientSock.setSoTimeout(5);
+            clientSock.connect(new InetSocketAddress(clusterServerForCacheKey.getHost(), clusterServerForCacheKey.getPort()), 2000);
+            clientSock.setSoTimeout(5000);
             DistributedRequestResponse<Serializable> distrr = 
                     new DistributedRequestResponse<>(clusterServerForCacheKey.getHost(), clusterServerForCacheKey.getPort(),
                             key, cacheName);
