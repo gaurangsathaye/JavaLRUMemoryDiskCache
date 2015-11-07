@@ -34,6 +34,7 @@ public class DistributedManager {
     
     private int numberOfClusterServers;
     private DistributedConfigServer selfServer;
+    private boolean standAlone = false;
     
     public DistributedManager(int serverPort, String clusterConfig, AbstractCacheService<? extends Serializable>... caches) throws Exception {
         if(Utl.areBlank(clusterConfig)) throw new Exception("Cluster config is blank.");
@@ -47,8 +48,18 @@ public class DistributedManager {
         createClusterServers(clusterConfig);
         createCacheMap(caches);
         
+        this.standAlone = false;
+        
         this.server = new DistributedServer(serverPort, this);
         startServer();
+    }
+    
+    Runnable getServerReaquestProcessor(Socket socket, DistributedManager distributedManager){
+        if(this.standAlone){
+            return null;
+        }else{
+            return new DistributedServerRequestProcessor(socket, distributedManager);
+        }
     }
 
     public int getServerThreadPoolSize() {

@@ -15,6 +15,8 @@ public class CacheEntry<T extends Serializable> implements Serializable {
     
     private final T t;
     private final long timestamp;
+    private long ttl;
+    private long ttlTimeout;
     
     public CacheEntry(T t, long timestamp){
         this.t=t;
@@ -27,5 +29,18 @@ public class CacheEntry<T extends Serializable> implements Serializable {
     
     public long getTimestamp(){
         return this.timestamp;
+    }
+
+    public long getTtl() {
+        return ttl;
+    }
+
+    public void setTtl(long ttlInMilliseconds) {
+        this.ttl = ttlInMilliseconds;
+        this.ttlTimeout = System.currentTimeMillis() + ttlInMilliseconds;
+    }
+    
+    public boolean isTtlExpired(){
+        return (System.currentTimeMillis() > ttlTimeout);
     }
 }

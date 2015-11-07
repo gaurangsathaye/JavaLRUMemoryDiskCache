@@ -36,7 +36,8 @@ class DistributedServer implements Runnable {
             this.serverSocket = new ServerSocket(port);
             while(true){
                 try{
-                    this.threadPool.execute(new DistributedServerRequestProcessor(serverSocket.accept(), this.distributedManager));
+                    //this.threadPool.execute(new DistributedServerRequestProcessor(serverSocket.accept(), this.distributedManager));
+                    this.threadPool.execute(this.distributedManager.getServerReaquestProcessor(serverSocket.accept(), distributedManager));
                 }catch(Exception e){
                 }                
             }
