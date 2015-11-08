@@ -90,9 +90,13 @@ public abstract class AbstractCacheService<T> implements DiskOps {
 
         if (this.distributed && (null != this.distMgr)) {
             T cachedObj = getDistributed(key);
-            if(null != cachedObj) return cachedObj;
+            if(null != cachedObj){
+                p("remote-000");
+                return cachedObj;
+            }
         }
-
+        
+        p("local-000");
         return getNonDistributed(key);
     }
 
@@ -214,6 +218,7 @@ public abstract class AbstractCacheService<T> implements DiskOps {
         );
         statsMap.put("cacheMaxSize", cacheSize);
         statsMap.put("cacheCurrentSize", cache.size());
+        if(this.persist) statsMap.put("dataDir", this.dataDir);
         return statsMap;
     }
 

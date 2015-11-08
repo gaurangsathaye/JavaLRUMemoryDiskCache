@@ -14,9 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author sathayeg
  */
 public class DistributedManager {
-    
-    private int serverThreadPoolSize = 200;
-    
+        
     private int serverPort;
     private final List<DistributedConfigServer> clusterServers = new ArrayList<>();
     private final Map<String, DistributedConfigServer> clusterServerMap = new HashMap<>();
@@ -56,13 +54,8 @@ public class DistributedManager {
     }
 
     public int getServerThreadPoolSize() {
-        return serverThreadPoolSize;
+        return Config.serverThreadPoolSize;
     }
-
-    public void setServerThreadPoolSize(int serverThreadPoolSize) {
-        if(serverThreadPoolSize < 1) return;
-        this.serverThreadPoolSize = serverThreadPoolSize;
-    }   
     
     public DistributedConfigServer getClusterServerForCacheKey(String key) throws BadRequestException{
         if(Utl.areBlank(key)) throw new BadRequestException("key is blank", null);

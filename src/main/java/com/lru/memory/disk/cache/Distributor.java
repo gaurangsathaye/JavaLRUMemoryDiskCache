@@ -1,6 +1,5 @@
 package com.lru.memory.disk.cache;
 
-import com.lru.memory.disk.cache.AbstractCacheService;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,6 +26,23 @@ public class Distributor {
             throw new Exception("Distributed caches already created on port: " + listenPort);
         }
         distMgrMap.put(Integer.toString(listenPort), new DistributedManager(listenPort, cluster, caches));
+    }
+    
+    /*static int clientConnectTimeoutMillis = 5000;
+    static int clientReadTimeoutMillis = 15000;
+    static int serverThreadPoolSize = 200;*/    
+    public static void config(int serverThreadPoolSize, int clientConnectTimeoutMillis, int clientReadTimeoutMillis){
+        if(serverThreadPoolSize > 0){
+            Config.serverThreadPoolSize = serverThreadPoolSize;
+        }
+        
+        if(clientConnectTimeoutMillis > -1){
+            Config.clientConnectTimeoutMillis = clientConnectTimeoutMillis;
+        }
+        
+        if(clientReadTimeoutMillis > -1){
+            Config.clientReadTimeoutMillis = clientReadTimeoutMillis;
+        }
     }
     
     public static DistributedManager getDistMgr(int serverPort){

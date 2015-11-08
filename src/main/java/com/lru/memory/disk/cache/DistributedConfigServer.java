@@ -1,6 +1,5 @@
 package com.lru.memory.disk.cache;
 
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -11,9 +10,6 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class DistributedConfigServer {
     
-    public static final long SevereServerErrorAttemptDelta = 2000L;
-    public static final long NetworkErrorAttemptDelta = 100L;
-    
     private final String host;
     private final int port;
     private AtomicBoolean self = new AtomicBoolean(false);
@@ -21,11 +17,11 @@ public class DistributedConfigServer {
     
     private AtomicLong totalSevereErrors = new AtomicLong(0);
     private AtomicInteger severeErrorsRotate = new AtomicInteger(0);
-    private int severeErrorRotateLimit = 5;
+    private int severeErrorRotateLimit = 7;
     
     private AtomicLong totalNetworkErrors = new AtomicLong(0);
     private AtomicInteger networkErrorsRotate = new AtomicInteger(0);
-    private int networkErrorsRotateLimit = 5;
+    private int networkErrorsRotateLimit = 10;
 
     public DistributedConfigServer(String host, String port) throws Exception {
         if (Utl.areBlank(host, port)) {
@@ -63,12 +59,12 @@ public class DistributedConfigServer {
     
     public void setSevereErrorNextAttemptTimestamp(){
         totalSevereErrors.incrementAndGet();
-        this.errNextAttemptTimestamp = System.currentTimeMillis() + (SevereServerErrorAttemptDelta * rotate(severeErrorsRotate, severeErrorRotateLimit));
+        this.errNextAttemptTimestamp = System.currentTimeMillis() + (Config.SevereServerErrorAttemptDeltaMillis * rotate(severeErrorsRotate, severeErrorRotateLimit));
     }
     
     public void setNetworkErrorNextAttemptTimestamp(){
         totalNetworkErrors.incrementAndGet();
-        this.errNextAttemptTimestamp = System.currentTimeMillis() + (NetworkErrorAttemptDelta * rotate(networkErrorsRotate, networkErrorsRotateLimit));
+        this.errNextAttemptTimestamp = System.currentTimeMillis() + (Config.NetworkErrorAttemptDeltaMillis * rotate(networkErrorsRotate, networkErrorsRotateLimit));
     }
         
     public String getHost() {
