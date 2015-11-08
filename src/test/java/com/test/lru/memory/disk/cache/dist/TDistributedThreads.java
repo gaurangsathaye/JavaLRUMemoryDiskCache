@@ -27,7 +27,7 @@ public class TDistributedThreads {
     
     static int cacheSize = 1000;
     static int loopCount = 2000;
-    static int randomRange = 1200;
+    static int randomRange = 1500;
     static int threadPoolSize = 222;
     void distribute() throws Exception {
         p("start distribute");

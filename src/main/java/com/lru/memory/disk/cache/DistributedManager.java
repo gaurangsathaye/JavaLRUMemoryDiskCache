@@ -45,7 +45,7 @@ public class DistributedManager {
         startServer();
     }
     
-    Runnable getServerReaquestProcessor(Socket socket, DistributedManager distributedManager){
+    Runnable getServerRequestProcessor(Socket socket, DistributedManager distributedManager){
         if(this.standAlone){
             return null;
         }else{

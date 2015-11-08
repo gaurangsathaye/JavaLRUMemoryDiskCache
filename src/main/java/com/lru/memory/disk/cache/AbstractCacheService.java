@@ -373,59 +373,6 @@ public abstract class AbstractCacheService<T> implements DiskOps {
         }
     }
 
-    /*private void serialize(String key, T t) throws LruCacheSerializationException {
-        FileOutputStream fos = null;
-        ObjectOutputStream oos = null;
-        try {
-            fos = new FileOutputStream(this.getPathToFile(key), false);
-            oos = new ObjectOutputStream(fos);
-            oos.writeObject(t);
-        } catch (Exception e) {
-            throw new LruCacheSerializationException("Unable to serialize key: " + key, e);
-        } finally {
-            try {
-                fos.close();
-            } catch (Exception e) {
-            }
-            try {
-                oos.close();
-            } catch (Exception e) {
-            }
-        }
-    }*/
-    
-    /*
-    private T deserialize(String key) throws Exception {
-        File f = new File(this.getPathToFile(key));
-        if (!f.exists()) {
-            return null;
-        }
-        FileInputStream fis = null;
-        ObjectInputStream ois = null;
-        try {
-            fis = new FileInputStream(f);
-            ois = new ObjectInputStream(fis);
-            return ((T) ois.readObject());
-        } catch (Exception e) {
-            //Don't throw any errors here, delete the existing file
-            //This may have been due to deserialization incompatibilities from serial version uid or cached item code changes, etc.
-            try {
-                f.delete();
-            } catch (Exception exd) {
-            }
-        } finally {
-            try {
-                fis.close();
-            } catch (Exception e) {
-            }
-            try {
-                ois.close();
-            } catch (Exception e) {
-            }
-        }
-        return null;
-    }*/
-
     //Distributed
     void setDistributedManager(DistributedManager dm) throws Exception {
         if (null == dm) {

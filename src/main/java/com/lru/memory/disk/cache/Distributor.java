@@ -28,9 +28,12 @@ public class Distributor {
         distMgrMap.put(Integer.toString(listenPort), new DistributedManager(listenPort, cluster, caches));
     }
     
-    /*static int clientConnectTimeoutMillis = 5000;
-    static int clientReadTimeoutMillis = 15000;
-    static int serverThreadPoolSize = 200;*/    
+    /**
+     * 
+     * @param serverThreadPoolSize
+     * @param clientConnectTimeoutMillis
+     * @param clientReadTimeoutMillis 
+     */   
     public static void config(int serverThreadPoolSize, int clientConnectTimeoutMillis, int clientReadTimeoutMillis){
         if(serverThreadPoolSize > 0){
             Config.serverThreadPoolSize = serverThreadPoolSize;
