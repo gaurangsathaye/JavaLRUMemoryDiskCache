@@ -92,7 +92,8 @@ public class TDistributedThreads {
                     Thread.sleep(new Random().nextInt(800) + 200);
                 }catch(Exception e){}
                 StringBuilder sb = new StringBuilder();
-                String val = cache.get(Integer.toString(new Random().nextInt(randomRange)));
+                //String val = cache.get(Integer.toString(new Random().nextInt(randomRange)));
+                String val = cache.get("1");
                 sb.append(val).append("\n").append("\n===============\n");
                 p(sb.toString());
             } catch (Exception e) {

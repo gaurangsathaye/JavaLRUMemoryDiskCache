@@ -93,6 +93,8 @@ public abstract class AbstractCacheService<T> implements DiskOps {
             if(null != cachedObj){
                 p("remote-000");
                 return cachedObj;
+            }else{
+                p("remote-null-000");
             }
         }
         
@@ -105,6 +107,7 @@ public abstract class AbstractCacheService<T> implements DiskOps {
         DistributedConfigServer clusterServerForCacheKey = null;
         try {
             if (Utl.areBlank(key)) {
+                p("getDistributed bad request return null");
                 throw new BadRequestException("key is blank", null);
             }
 
@@ -113,6 +116,7 @@ public abstract class AbstractCacheService<T> implements DiskOps {
                     ", cluster server: "+ clusterServerForCacheKey.toString());
 
             if (clusterServerForCacheKey.isSelf() || (! clusterServerForCacheKey.tryRemote())) {
+                p("getDistributed return null:"+clusterServerForCacheKey.isSelf() + ":"+clusterServerForCacheKey.tryRemote());
                 return null;
             }
 
@@ -122,6 +126,7 @@ public abstract class AbstractCacheService<T> implements DiskOps {
             if (distrr.getServerSetErrorLevel() >= DistributedServer.ServerErrorLevelSevere) {
                 this.statsRemoteSevereErrs.incrementAndGet();
                 clusterServerForCacheKey.setSevereErrorNextAttemptTimestamp();
+                p("getDistributed severe err return null");
                 return null;
             }
 
@@ -134,10 +139,12 @@ public abstract class AbstractCacheService<T> implements DiskOps {
                     p("error: Unable to cast remote data for key: " + key + " :: " + e);
                     this.statsRemoteSevereErrs.incrementAndGet();
                     clusterServerForCacheKey.setSevereErrorNextAttemptTimestamp();
+                    p("getDistributed cast exception return null");
                     return null;
                 }
             } else {
                 this.statsRemoteSuccesses.incrementAndGet();
+                p("getDistributed serverSetData return null");
                 throw new LoadDataIsNullException("Distributed get value is null for key: " + key, null);
             }
 
@@ -157,6 +164,7 @@ public abstract class AbstractCacheService<T> implements DiskOps {
             this.statsRemoteSevereErrs.incrementAndGet();
             clusterServerForCacheKey.setSevereErrorNextAttemptTimestamp();
         }
+        p("getDistributed return last null");
         return null;
     }
 
