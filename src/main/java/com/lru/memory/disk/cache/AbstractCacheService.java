@@ -35,6 +35,7 @@ public abstract class AbstractCacheService<T> implements DiskOps {
     private final AtomicLong statsRemoteSuccesses;
     private final AtomicLong statsRemoteNetworkErrs;
     private final AtomicLong statsRemoteSevereErrs;
+    private final AtomicLong statsLocalAttempts;
     private final String cacheName;
     private final int cacheSize;
     private final Map<String, Object> statsMap;
@@ -64,6 +65,7 @@ public abstract class AbstractCacheService<T> implements DiskOps {
         this.statsRemoteSuccesses = new AtomicLong(0L);
         this.statsRemoteNetworkErrs = new AtomicLong(0L);
         this.statsRemoteSevereErrs = new AtomicLong(0L);
+        this.statsLocalAttempts = new AtomicLong(0L);
         this.cacheSize = cacheSize;
         this.statsMap = new HashMap<>();
         this.persist = diskPersist;
@@ -99,6 +101,7 @@ public abstract class AbstractCacheService<T> implements DiskOps {
         }
         
         p("local-000");
+        this.statsLocalAttempts.incrementAndGet();
         return getNonDistributed(key);
     }
 
@@ -220,6 +223,7 @@ public abstract class AbstractCacheService<T> implements DiskOps {
         statsMap.put("remoteSuccesses", this.statsRemoteSuccesses.get());
         statsMap.put("remoteErrNetwork", this.statsRemoteNetworkErrs.get());
         statsMap.put("remoteErrSevere", this.statsRemoteSevereErrs.get());
+        statsMap.put("localAttempts", this.statsLocalAttempts.get());
         statsMap.put("misses", misses);
         statsMap.put("hitratio",
                 (hits < 1) ? 0.0 : (((double) hits) / ((double) (hits + misses)))
