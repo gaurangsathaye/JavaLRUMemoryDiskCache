@@ -26,9 +26,9 @@ public class TDistributedThreads {
     }
     
     static int cacheSize = 1000;
-    static int loopCount = 10;
-    static int randomRange = 2;
-    static int threadPoolSize = 5;
+    static int loopCount = 2000;
+    static int randomRange = 1200;
+    static int threadPoolSize = 222;
     void distribute() throws Exception {
         p("start distribute");
         Cache cache1 = new Cache("teaCache", cacheSize, true, "./datadir/server1/teacache", new Dao("server1"));
@@ -39,16 +39,16 @@ public class TDistributedThreads {
         List<Cache> cacheList = new ArrayList<>();
         cacheList.add(cache1);
         cacheList.add(cache2);
-        //cacheList.add(cache3);
-        //cacheList.add(cache4);
+        cacheList.add(cache3);
+        cacheList.add(cache4);
 
         String clusterConfig = "127.0.0.1:19000, 127.0.0.1:19001";
 
-        Distributor.config(220, 7000, 15000);
+        Distributor.config(250, 7000, 15000);
         Distributor.distribute(19000, clusterConfig, cache1, cache3);
         Distributor.distribute(19001, clusterConfig, cache2, cache4);
         
-        try{Thread.sleep(3000);}catch(Exception e){}
+        //try{Thread.sleep(3000);}catch(Exception e){} //wait for servers to start
         
         ExecutorService execService = Executors.newFixedThreadPool(threadPoolSize);
         AtomicInteger ai = new AtomicInteger(0);
@@ -92,8 +92,8 @@ public class TDistributedThreads {
                     Thread.sleep(new Random().nextInt(800) + 200);
                 }catch(Exception e){}
                 StringBuilder sb = new StringBuilder();
-                //String val = cache.get(Integer.toString(new Random().nextInt(randomRange)));
-                String val = cache.get("1");
+                String val = cache.get(Integer.toString(new Random().nextInt(randomRange)));
+                //String val = cache.get("1");
                 sb.append(val).append("\n").append("\n===============\n");
                 p(sb.toString());
             } catch (Exception e) {
