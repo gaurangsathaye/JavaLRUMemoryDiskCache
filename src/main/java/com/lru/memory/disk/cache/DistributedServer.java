@@ -28,7 +28,7 @@ class DistributedServer implements Runnable {
     DistributedServer(int port, DistributedManager distributedManager) {
         this.port = port;
         this.distributedManager = distributedManager;
-        threadPool = Executors.newFixedThreadPool(this.distributedManager.getServerThreadPoolSize());
+        threadPool = Executors.newFixedThreadPool(this.distributedManager.getConfig().getServerThreadPoolSize());
     }
 
     void startServer() throws IOException {

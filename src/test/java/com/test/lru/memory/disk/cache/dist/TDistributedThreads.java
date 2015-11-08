@@ -1,6 +1,7 @@
 package com.test.lru.memory.disk.cache.dist;
 
 import com.lru.memory.disk.cache.AbstractCacheService;
+import com.lru.memory.disk.cache.DistributedConfig;
 import com.lru.memory.disk.cache.Distributor;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,9 +27,9 @@ public class TDistributedThreads {
     }
     
     static int cacheSize = 1000;
-    static int loopCount = 2000;
-    static int randomRange = 1500;
-    static int threadPoolSize = 222;
+    static int loopCount = 10;
+    static int randomRange = 4;
+    static int threadPoolSize = 50;
     void distribute() throws Exception {
         p("start distribute");
         Cache cache1 = new Cache("teaCache", cacheSize, true, "./datadir/server1/teacache", new Dao("server1"));
@@ -44,9 +45,9 @@ public class TDistributedThreads {
 
         String clusterConfig = "127.0.0.1:19000, 127.0.0.1:19001";
 
-        Distributor.config(250, 7000, 15000);
-        Distributor.distribute(19000, clusterConfig, cache1, cache3);
-        Distributor.distribute(19001, clusterConfig, cache2, cache4);
+        DistributedConfig config = new DistributedConfig(250, 7000, 15000);
+        Distributor.distribute(19000, clusterConfig, config, cache1, cache3);
+        Distributor.distribute(19001, clusterConfig, config, cache2, cache4);
         
         //try{Thread.sleep(3000);}catch(Exception e){} //wait for servers to start
         

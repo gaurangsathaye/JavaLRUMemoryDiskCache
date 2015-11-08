@@ -44,6 +44,7 @@ public abstract class AbstractCacheService<T> implements DiskOps {
     private CacheLockManager lockMgr;
     private DistributedManager distMgr;
     private boolean distributed;
+    private DistributedClient distClient;
 
     public AbstractCacheService(String cacheName, int cacheSize) throws Exception {
         this(cacheName, cacheSize, false, null);
@@ -119,7 +120,7 @@ public abstract class AbstractCacheService<T> implements DiskOps {
             
             this.statsRemoteAttempts.incrementAndGet();
 
-            DistributedRequestResponse<Serializable> distrr = DistributedClient.distributedCacheGet(cacheName, key, clusterServerForCacheKey);
+            DistributedRequestResponse<Serializable> distrr = this.distClient.distributedCacheGet(cacheName, key, clusterServerForCacheKey);
             p("distrr for key: " + key + " :: " + distrr.toString());
 
             if (distrr.getServerSetErrorLevel() >= DistributedServer.ServerErrorLevelSevere) {
@@ -380,5 +381,6 @@ public abstract class AbstractCacheService<T> implements DiskOps {
         }
         this.distMgr = dm;
         this.distributed = true;
+        this.distClient = this.distMgr.getDistributedClient();
     }
 }

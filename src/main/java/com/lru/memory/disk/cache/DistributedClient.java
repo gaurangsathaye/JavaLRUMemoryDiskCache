@@ -16,8 +16,15 @@ import java.net.SocketException;
  * @author sathayeg
  */
 public class DistributedClient {
+    private final DistributedManager distMgr;
+    private final DistributedConfig config;
     
-    static DistributedRequestResponse<Serializable> distributedCacheGet(String cacheName, String key, 
+    DistributedClient(DistributedManager distMgr){
+        this.distMgr = distMgr;
+        this.config = this.distMgr.getConfig();
+    }
+    
+    DistributedRequestResponse<Serializable> distributedCacheGet(String cacheName, String key, 
             DistributedConfigServer clusterServerForCacheKey) throws BadRequestException, SocketException, IOException, ClassNotFoundException { 
         if(Utl.areBlank(cacheName, key)) throw new BadRequestException("DistributedManger.distributedCacheGet: cacheName, key is blank", null);
         if(null == clusterServerForCacheKey) throw new BadRequestException("clusterServerForCacheKey is null", null);
@@ -33,8 +40,8 @@ public class DistributedClient {
         try {            
             //clientSock = new Socket(clusterServerForCacheKey.getHost(), clusterServerForCacheKey.getPort());
             clientSock = new Socket();
-            clientSock.connect(new InetSocketAddress(clusterServerForCacheKey.getHost(), clusterServerForCacheKey.getPort()), Config.clientConnectTimeoutMillis);
-            clientSock.setSoTimeout(Config.clientReadTimeoutMillis);
+            clientSock.connect(new InetSocketAddress(clusterServerForCacheKey.getHost(), clusterServerForCacheKey.getPort()), this.config.getClientConnTimeoutMillis());
+            clientSock.setSoTimeout(this.config.getClientReadTimeoutMillis());
             DistributedRequestResponse<Serializable> distrr = 
                     new DistributedRequestResponse<>(clusterServerForCacheKey.getHost(), clusterServerForCacheKey.getPort(),
                             key, cacheName);

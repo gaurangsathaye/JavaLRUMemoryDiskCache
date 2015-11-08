@@ -59,12 +59,12 @@ public class DistributedConfigServer {
     
     public void setSevereErrorNextAttemptTimestamp(){
         totalSevereErrors.incrementAndGet();
-        this.errNextAttemptTimestamp = System.currentTimeMillis() + (Config.SevereServerErrorAttemptDeltaMillis * rotate(severeErrorsRotate, severeErrorRotateLimit));
+        this.errNextAttemptTimestamp = System.currentTimeMillis() + (DistributedConfig.SevereServerErrorAttemptDeltaMillis * rotate(severeErrorsRotate, severeErrorRotateLimit));
     }
     
     public void setNetworkErrorNextAttemptTimestamp(){
         totalNetworkErrors.incrementAndGet();
-        this.errNextAttemptTimestamp = System.currentTimeMillis() + (Config.NetworkErrorAttemptDeltaMillis * rotate(networkErrorsRotate, networkErrorsRotateLimit));
+        this.errNextAttemptTimestamp = System.currentTimeMillis() + (DistributedConfig.NetworkErrorAttemptDeltaMillis * rotate(networkErrorsRotate, networkErrorsRotateLimit));
     }
         
     public String getHost() {

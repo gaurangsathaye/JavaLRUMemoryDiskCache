@@ -22,33 +22,35 @@ public class Distributor {
      * @throws Exception 
      */
     public static void distribute(int listenPort, String cluster, AbstractCacheService<? extends Serializable>... caches) throws Exception {
-        if(distMgrMap.containsKey(Integer.toString(listenPort))){
-            throw new Exception("Distributed caches already created on port: " + listenPort);
-        }
-        distMgrMap.put(Integer.toString(listenPort), new DistributedManager(listenPort, cluster, caches));
+        distribute(listenPort, cluster, getDefaultConfig(), caches);
     }
     
     /**
      * 
-     * @param serverThreadPoolSize
-     * @param clientConnectTimeoutMillis
-     * @param clientReadTimeoutMillis 
-     */   
-    public static void config(int serverThreadPoolSize, int clientConnectTimeoutMillis, int clientReadTimeoutMillis){
-        if(serverThreadPoolSize > 0){
-            Config.serverThreadPoolSize = serverThreadPoolSize;
+     * @param listenPort The port number for this JVM's cache server
+     * @param cluster All your distributed caches: Format must be in the IP/DNS:port format for example: 172.16.0.0:8000,myserver.com:8000,172.17.0.0:9000.  All the caches in this cluster must be passed the same list with the same values and in the same order.
+     * @param config
+     * @param caches
+     * @throws Exception 
+     */
+    public static void distribute(int listenPort, String cluster, DistributedConfig config, AbstractCacheService<? extends Serializable>... caches) throws Exception {
+        if(distMgrMap.containsKey(Integer.toString(listenPort))){
+            throw new Exception("Distributed caches already created on port: " + listenPort);
         }
         
-        if(clientConnectTimeoutMillis > -1){
-            Config.clientConnectTimeoutMillis = clientConnectTimeoutMillis;
-        }
+        DistributedManager distributedManager = new DistributedManager(listenPort, cluster, config, caches);
+        distMgrMap.put(Integer.toString(listenPort), distributedManager);
         
-        if(clientReadTimeoutMillis > -1){
-            Config.clientReadTimeoutMillis = clientReadTimeoutMillis;
-        }
+        distributedManager.startServer();
     }
     
-    public static DistributedManager getDistMgr(int serverPort){
-        return distMgrMap.get(Integer.toString(serverPort));
+    /**
+     * 
+     * @return 
+     */
+    public static DistributedConfig getDefaultConfig() {
+        return new DistributedConfig(DistributedConfig.getDefaultServerThreadPoolSize(),
+                DistributedConfig.getDefaultClientConnectTimeoutMillis(), 
+                DistributedConfig.getDefaultClientReadTimeoutMillis());
     }
 }

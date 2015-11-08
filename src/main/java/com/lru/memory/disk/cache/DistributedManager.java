@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @author sathayeg
  */
-public class DistributedManager {
+class DistributedManager {
         
     private int serverPort;
     private final List<DistributedConfigServer> clusterServers = new ArrayList<>();
@@ -22,27 +22,34 @@ public class DistributedManager {
     private final DistributedServer server;
     private final String clusterConfig;
     private final AtomicBoolean foundSelf = new AtomicBoolean(false);
+    private final DistributedConfig config;
     
     private int numberOfClusterServers;
     private DistributedConfigServer selfServer;
     private boolean standAlone = false;
-    
-    public DistributedManager(int serverPort, String clusterConfig, AbstractCacheService<? extends Serializable>... caches) throws Exception {
+    private DistributedClient distributedClient;
+
+    DistributedManager(int serverPort, String clusterConfig, DistributedConfig config, AbstractCacheService<? extends Serializable>[] caches) throws Exception {
         if(Utl.areBlank(clusterConfig)) throw new Exception("Cluster config is blank.");
         
         if((null == caches) || (caches.length < 1)) throw new Exception("No caches passed in.");
         
         if(serverPort < 1) throw new Exception("Invalid port number: " + serverPort + ", serverPort must be between 1 and 65535 inclusive.");
         
-        this.clusterConfig = clusterConfig;
-        this.serverPort = serverPort;
-        createClusterServers(clusterConfig);
-        createCacheMap(caches);
+        if(null == config) throw new Exception("Config is null, please pass in Config");
         
+        this.serverPort = serverPort;
+        this.clusterConfig = clusterConfig;        
+        this.config = config;
         this.standAlone = false;
         
         this.server = new DistributedServer(serverPort, this);
-        startServer();
+        //Don't start server here, server is started by Distributor
+        
+        this.distributedClient = new DistributedClient(this);
+        
+        createClusterServers(clusterConfig);
+        createCacheMap(caches);     
     }
     
     Runnable getServerRequestProcessor(Socket socket, DistributedManager distributedManager){
@@ -52,25 +59,29 @@ public class DistributedManager {
             return new DistributedServerRequestProcessor(socket, distributedManager);
         }
     }
-
-    public int getServerThreadPoolSize() {
-        return Config.serverThreadPoolSize;
-    }
     
-    public DistributedConfigServer getClusterServerForCacheKey(String key) throws BadRequestException{
+    DistributedConfigServer getClusterServerForCacheKey(String key) throws BadRequestException{
         if(Utl.areBlank(key)) throw new BadRequestException("key is blank", null);
         return clusterServers.get((Math.abs(key.hashCode()) % this.numberOfClusterServers));
     }
     
-    public int getServerPort() {
+    DistributedConfig getConfig(){
+        return this.config;
+    }
+    
+    DistributedClient getDistributedClient(){
+        return this.distributedClient;
+    }
+    
+    int getServerPort() {
         return serverPort;
     }
 
-    public List<DistributedConfigServer> getClusterServers() {
+    List<DistributedConfigServer> getClusterServers() {
         return clusterServers;
     }
 
-    public Map<String, AbstractCacheService<? extends Serializable>> getCacheMap() {
+    Map<String, AbstractCacheService<? extends Serializable>> getCacheMap() {
         return cacheMap;
     }   
     
@@ -78,7 +89,7 @@ public class DistributedManager {
         return this.foundSelf.get();
     }
 
-    public DistributedConfigServer getSelfServer() {
+    DistributedConfigServer getSelfServer() {
         return selfServer;
     }   
     
@@ -100,7 +111,7 @@ public class DistributedManager {
         return foundSelf.get();
     }
       
-    private void startServer() {
+    void startServer() {
         new Thread(this.server).start();
     }
     
