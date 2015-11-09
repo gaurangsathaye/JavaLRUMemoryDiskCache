@@ -6,6 +6,7 @@ import com.lru.memory.disk.cache.Distributor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -28,8 +29,8 @@ public class TDistributedThreads {
     
     static int cacheSize = 1000;
     static int loopCount = 500;
-    static int randomRange = 100;
-    static int threadPoolSize = 100;
+    static int randomRange = 2;
+    static int threadPoolSize = 20;
     void distribute() throws Exception {
         p("start distribute");
         Cache cache1 = new Cache("teaCache", cacheSize, true, "./datadir/server1/teacache", new Dao("server1"));
@@ -119,12 +120,17 @@ public class TDistributedThreads {
 
         @Override
         public boolean isCacheItemValid(String o) {
-            if(dao.getServer().equals("server2"))  return false;
+            //if(dao.getServer().equals("server2"))  return false;
+            if(new Random().nextInt(100) < 20){
+                p("isCacheItemValid return false: server: " + dao.getServer() + ", cached Object: " + o);
+                return false;
+            }
             return (null != o);
         }
 
         @Override
-        public String loadData(String key) throws Exception {            
+        public String loadData(String key) throws Exception {  
+            p("loadData: server: " + dao.server + ", key: " + key);
             return this.dao.getData(key, this.getCacheName());
         }
 
@@ -143,7 +149,7 @@ public class TDistributedThreads {
 
         public String getData(String key, String cacheName) throws Exception {
             //if(server.equals("server2")) throw new Exception("test loadData Exception");
-            return "data for key: " + key + ", cacheName: " + cacheName + ", server: " + server;
+            return "data for key: " + key + ", cacheName: " + cacheName + ", server: " + server + ", uuid: " + UUID.randomUUID().toString();
         }
     }
 
