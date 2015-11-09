@@ -27,8 +27,8 @@ public class TDistributedThreads {
     }
     
     static int cacheSize = 1000;
-    static int loopCount = 10;
-    static int randomRange = 4;
+    static int loopCount = 1;
+    static int randomRange = 2;
     static int threadPoolSize = 50;
     void distribute() throws Exception {
         p("start distribute");
@@ -39,13 +39,13 @@ public class TDistributedThreads {
 
         List<Cache> cacheList = new ArrayList<>();
         cacheList.add(cache1);
-        cacheList.add(cache2);
-        cacheList.add(cache3);
-        cacheList.add(cache4);
+        //cacheList.add(cache2);
+        //cacheList.add(cache3);
+        //cacheList.add(cache4);
 
         String clusterConfig = "127.0.0.1:19000, 127.0.0.1:19001";
 
-        DistributedConfig config = new DistributedConfig(250, 7000, 15000);
+        DistributedConfig config = new DistributedConfig(250, 1000, 1000);
         Distributor.distribute(19000, clusterConfig, config, cache1, cache3);
         Distributor.distribute(19001, clusterConfig, config, cache2, cache4);
         
@@ -93,8 +93,8 @@ public class TDistributedThreads {
                     Thread.sleep(new Random().nextInt(800) + 200);
                 }catch(Exception e){}
                 StringBuilder sb = new StringBuilder();
-                String val = cache.get(Integer.toString(new Random().nextInt(randomRange)));
-                //String val = cache.get("1");
+                //String val = cache.get(Integer.toString(new Random().nextInt(randomRange)));
+                String val = cache.get("1");
                 sb.append(val).append("\n").append("\n===============\n");
                 p(sb.toString());
             } catch (Exception e) {
@@ -119,11 +119,13 @@ public class TDistributedThreads {
 
         @Override
         public boolean isCacheItemValid(String o) {
+            if(dao.getServer().equals("server2"))  return false;
             return (null != o);
         }
 
         @Override
         public String loadData(String key) throws Exception {
+            if(dao.getServer().equals("server2")) throw new Exception("test loadData Exception");
             return this.dao.getData(key, this.getCacheName());
         }
 
@@ -134,6 +136,10 @@ public class TDistributedThreads {
 
         public Dao(String server) {
             this.server = server;
+        }
+        
+        public String getServer(){
+            return server;
         }
 
         public String getData(String key, String cacheName) {
