@@ -14,12 +14,12 @@ public class DistributedResponseCache extends AbstractCacheService<CacheEntry<Se
 
     @Override
     public boolean isCacheItemValid(CacheEntry<Serializable> o) {
-        return ( (null != o) && (null != o.getCached()) && (! o.isTtlExpired()) );
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public CacheEntry<Serializable> loadData(String key) throws Exception {
-        return null;
+        throw new UnsupportedOperationException();
     }
     
 }

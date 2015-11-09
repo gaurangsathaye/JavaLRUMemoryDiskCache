@@ -6,8 +6,11 @@ package com.lru.memory.disk.cache;
  */
 public class DistributedConfig {
     
-    public static final long SevereServerErrorAttemptDeltaMillis = 90000L;
-    public static final long NetworkErrorAttemptDeltaMillis = 20000L;
+    static final long SevereServerErrorAttemptDeltaMillis = 90000L;
+    static final long NetworkErrorAttemptDeltaMillis = 20000L;
+    //Don't set DistributedCachedEntryTtlMillis higher than NetworkErrorAttemptDeltaMillis and SevereServerErrorAttemptDeltaMillis, 
+    //because it will interfere with deltas for DistributedConfigServer.tryRemote
+    static final long DistributedCachedEntryTtlMillis = NetworkErrorAttemptDeltaMillis;
     
     private static final int defaultClientConnectTimeoutMillis = 5000;
     private static final int defaultClientReadTimeoutMillis = 15000;

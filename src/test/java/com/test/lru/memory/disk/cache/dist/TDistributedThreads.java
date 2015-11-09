@@ -27,9 +27,9 @@ public class TDistributedThreads {
     }
     
     static int cacheSize = 1000;
-    static int loopCount = 1;
-    static int randomRange = 2;
-    static int threadPoolSize = 50;
+    static int loopCount = 500;
+    static int randomRange = 100;
+    static int threadPoolSize = 100;
     void distribute() throws Exception {
         p("start distribute");
         Cache cache1 = new Cache("teaCache", cacheSize, true, "./datadir/server1/teacache", new Dao("server1"));
@@ -39,7 +39,7 @@ public class TDistributedThreads {
 
         List<Cache> cacheList = new ArrayList<>();
         cacheList.add(cache1);
-        //cacheList.add(cache2);
+        cacheList.add(cache2);
         //cacheList.add(cache3);
         //cacheList.add(cache4);
 
@@ -93,12 +93,12 @@ public class TDistributedThreads {
                     Thread.sleep(new Random().nextInt(800) + 200);
                 }catch(Exception e){}
                 StringBuilder sb = new StringBuilder();
-                //String val = cache.get(Integer.toString(new Random().nextInt(randomRange)));
-                String val = cache.get("1");
+                String val = cache.get(Integer.toString(new Random().nextInt(randomRange)));
+                //String val = cache.get("1");
                 sb.append(val).append("\n").append("\n===============\n");
                 p(sb.toString());
             } catch (Exception e) {
-                p("error CacheGetThread: " + cache.getCacheName() + " : " + e);
+                p("error CacheGetThread: " + cache.getCacheName() + " : " + e + "\n===============\n");
             }
             ai.incrementAndGet();
         }
@@ -124,8 +124,7 @@ public class TDistributedThreads {
         }
 
         @Override
-        public String loadData(String key) throws Exception {
-            if(dao.getServer().equals("server2")) throw new Exception("test loadData Exception");
+        public String loadData(String key) throws Exception {            
             return this.dao.getData(key, this.getCacheName());
         }
 
@@ -142,7 +141,8 @@ public class TDistributedThreads {
             return server;
         }
 
-        public String getData(String key, String cacheName) {
+        public String getData(String key, String cacheName) throws Exception {
+            //if(server.equals("server2")) throw new Exception("test loadData Exception");
             return "data for key: " + key + ", cacheName: " + cacheName + ", server: " + server;
         }
     }

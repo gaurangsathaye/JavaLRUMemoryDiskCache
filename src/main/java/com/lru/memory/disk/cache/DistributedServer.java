@@ -11,14 +11,18 @@ import java.util.concurrent.Executors;
  */
 class DistributedServer implements Runnable {
     
-    public static final byte ServerErrorLevelSevere_CacheNameDoesNotExist = 23;
-    public static final byte ServerErrorLevelSevere_SelfIdentification = 22;
-    public static final byte ServerErrorLevelSevere_ClientServerDontMatchForKey = 21; //If the distributed server the client thinks should serve this key does not match the distributed server the server thinks should handle this key.
-    public static final byte ServerErrorLevelSevere = 20;
-    public static final byte ServerErrorLevelBadRequest = 7;
-    public static final byte ServerErrorLevelCacheGetException = 2;
-    public static final byte ServerErrorLevelCacheGetAllOk = 1;
-    public static final byte ServerErrorLevelNotSet = 0;
+    static final byte ServerErrorLevelSevere_CacheNameDoesNotExist = 23;
+    static final byte ServerErrorLevelSevere_SelfIdentification = 22;
+    static final byte ServerErrorLevelSevere_ClientServerDontMatchForKey = 21; //If the distributed server the client thinks should serve this key does not match the distributed server the server thinks should handle this key.
+    static final byte ServerErrorLevelSevere = 20;
+    
+    static final byte ServerErrorLevelBadRequest = 7;
+
+    //We don't want to cache distributed responses where error level is over ServerErrorLevelDistributedResponseCacheable, becaues it will interfere with deltas for servere and network errors
+    static final byte ServerErrorLevelDistributedResponseCacheable = 2;
+    static final byte ServerErrorLevelCacheGetException = 2;
+    static final byte ServerErrorLevelCacheGetAllOk = 1;
+    static final byte ServerErrorLevelNotSet = 0;
         
     private ServerSocket serverSocket = null;
     private ExecutorService threadPool = null;
