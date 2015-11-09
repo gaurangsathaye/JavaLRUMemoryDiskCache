@@ -24,6 +24,12 @@ public class DistributedClient {
         this.config = this.distMgr.getConfig();
     }
     
+    DistributedRequestResponse<Serializable> getCachedDistResponse(String cacheName, String key, 
+            DistributedConfigServer clusterServerForCacheKey) {
+        
+        return null;
+    }
+    
     DistributedRequestResponse<Serializable> distributedCacheGet(String cacheName, String key, 
             DistributedConfigServer clusterServerForCacheKey) throws BadRequestException, SocketException, IOException, ClassNotFoundException { 
         if(Utl.areBlank(cacheName, key)) throw new BadRequestException("DistributedManger.distributedCacheGet: cacheName, key is blank", null);

@@ -14,7 +14,7 @@ public class DistributedResponseCache extends AbstractCacheService<CacheEntry<Se
 
     @Override
     public boolean isCacheItemValid(CacheEntry<Serializable> o) {
-        return true;
+        return ( (null != o) && (null != o.getCached()) && (! o.isTtlExpired()) );
     }
 
     @Override
