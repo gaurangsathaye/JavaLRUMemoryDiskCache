@@ -22,7 +22,7 @@ public class Distributor {
      * @throws Exception 
      */
     public static void distribute(int listenPort, String cluster, AbstractCacheService<? extends Serializable>... caches) throws Exception {
-        distribute(listenPort, cluster, getDefaultConfig(), caches);
+        distribute(listenPort, cluster, DistributedConfig.getDefaultConfig(), caches);
     }
     
     /**
@@ -42,15 +42,5 @@ public class Distributor {
         distMgrMap.put(Integer.toString(listenPort), distributedManager);
         
         distributedManager.startServer();
-    }
-    
-    /**
-     * 
-     * @return 
-     */
-    public static DistributedConfig getDefaultConfig() {
-        return new DistributedConfig(DistributedConfig.getDefaultServerThreadPoolSize(),
-                DistributedConfig.getDefaultClientConnectTimeoutMillis(), 
-                DistributedConfig.getDefaultClientReadTimeoutMillis());
-    }
+    }   
 }

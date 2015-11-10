@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -19,6 +21,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @param <T>
  */
 public abstract class AbstractCacheService<T> implements DiskOps {
+    
+    Logger log = LoggerFactory.getLogger(AbstractCacheService.class);
 
     private static final String KeyInternalGetFromDisk = "f";
     private static final String KeyInternalGetCachedObj = "o";
@@ -111,7 +115,7 @@ public abstract class AbstractCacheService<T> implements DiskOps {
             }
 
             clusterServerForCacheKey = this.distMgr.getClusterServerForCacheKey(key);
-            p("distributed request info: server for key: " + key + 
+            log.info("distributed request info: server for key: " + key + 
                     ", cluster server: "+ clusterServerForCacheKey.toString());
 
             if (clusterServerForCacheKey.isSelf() || (! clusterServerForCacheKey.tryRemote())) {
@@ -119,9 +123,8 @@ public abstract class AbstractCacheService<T> implements DiskOps {
             }
             
             this.statsRemoteAttempts.incrementAndGet();
-
-            //DistributedRequestResponse<Serializable> distrr = this.distClient.distributedCacheGet(cacheName, key, clusterServerForCacheKey);
-            DistributedRequestResponse<Serializable> distrr = this.distClient.getCachedDistResponse(cacheName, key, clusterServerForCacheKey);
+            
+            DistributedRequestResponse<Serializable> distrr = this.distClient.distCacheGet(cacheName, key, clusterServerForCacheKey);
             p("distrr for key: " + key + " :: " + distrr.toString());
 
             if (distrr.getServerSetErrorLevel() >= DistributedServer.ServerErrorLevelSevere) {
@@ -377,11 +380,15 @@ public abstract class AbstractCacheService<T> implements DiskOps {
 
     //Distributed
     void setDistributedManager(DistributedManager dm) throws Exception {
-        if (null == dm) {
+        if ( null == dm) {
             throw new Exception("Distributed Manager is null");
         }
+        
         this.distMgr = dm;
         this.distributed = true;
         this.distClient = this.distMgr.getDistributedClient();
+        if(null == this.distClient){
+            throw new Exception("Distributed Client is null");
+        }
     }
 }

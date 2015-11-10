@@ -15,12 +15,21 @@ public class DistributedConfig {
     private static final int defaultClientConnectTimeoutMillis = 5000;
     private static final int defaultClientReadTimeoutMillis = 15000;
     private static final int defaultServerThreadPoolSize = 200;
+    private static final boolean defaultCacheDistributedResponse = true;
     
     private final int serverThreadPoolSize;
     private final int clientConnTimeoutMillis;
     private final int clientReadTimeoutMillis;
+    private final boolean cacheDistributedResponse;
     
-    public DistributedConfig(int serverThreadPoolSize, int clientConnTimeoutMillis, int clientReadTimeoutMillis){
+    /**
+     * 
+     * @param serverThreadPoolSize
+     * @param clientConnTimeoutMillis
+     * @param clientReadTimeoutMillis
+     * @param cacheDistributedResponse whether distributed response should be cached for a short time (20 seconds), to improve performance from fewer network calls
+     */
+    public DistributedConfig(int serverThreadPoolSize, int clientConnTimeoutMillis, int clientReadTimeoutMillis, boolean cacheDistributedResponse){
         
         if(serverThreadPoolSize < 1){
             serverThreadPoolSize = getDefaultServerThreadPoolSize();
@@ -37,7 +46,16 @@ public class DistributedConfig {
         this.serverThreadPoolSize = serverThreadPoolSize;
         this.clientConnTimeoutMillis = clientConnTimeoutMillis;
         this.clientReadTimeoutMillis = clientReadTimeoutMillis;
+        this.cacheDistributedResponse = cacheDistributedResponse;
     }
+
+    public static boolean isDefaultCacheDistributedResponse() {
+        return defaultCacheDistributedResponse;
+    }
+
+    public boolean isCacheDistributedResponse() {
+        return cacheDistributedResponse;
+    }   
 
     public static long getSevereServerErrorAttemptDeltaMillis() {
         return SevereServerErrorAttemptDeltaMillis;
@@ -69,6 +87,18 @@ public class DistributedConfig {
 
     public int getClientReadTimeoutMillis() {
         return clientReadTimeoutMillis;
+    }
+    
+    /**
+     * 
+     * @return 
+     */
+    public static DistributedConfig getDefaultConfig() {
+        return new DistributedConfig(getDefaultServerThreadPoolSize(),
+                getDefaultClientConnectTimeoutMillis(), 
+                getDefaultClientReadTimeoutMillis(),
+                isDefaultCacheDistributedResponse()
+        );
     }
   
 }

@@ -28,9 +28,9 @@ public class TDistributedThreads {
     }
     
     static int cacheSize = 1000;
-    static int loopCount = 500;
-    static int randomRange = 2;
-    static int threadPoolSize = 20;
+    static int loopCount = 1;
+    static int randomRange = 1;
+    static int threadPoolSize = 10;
     void distribute() throws Exception {
         p("start distribute");
         Cache cache1 = new Cache("teaCache", cacheSize, true, "./datadir/server1/teacache", new Dao("server1"));
@@ -46,7 +46,7 @@ public class TDistributedThreads {
 
         String clusterConfig = "127.0.0.1:19000, 127.0.0.1:19001";
 
-        DistributedConfig config = new DistributedConfig(250, 1000, 1000);
+        DistributedConfig config = new DistributedConfig(250, 1000, 1000, true);
         Distributor.distribute(19000, clusterConfig, config, cache1, cache3);
         Distributor.distribute(19001, clusterConfig, config, cache2, cache4);
         
@@ -94,12 +94,15 @@ public class TDistributedThreads {
                     Thread.sleep(new Random().nextInt(800) + 200);
                 }catch(Exception e){}
                 StringBuilder sb = new StringBuilder();
+                if(null == cache){
+                    p("error cache is null");
+                }
                 String val = cache.get(Integer.toString(new Random().nextInt(randomRange)));
                 //String val = cache.get("1");
                 sb.append(val).append("\n").append("\n===============\n");
                 p(sb.toString());
             } catch (Exception e) {
-                p("error CacheGetThread: " + cache.getCacheName() + " : " + e + "\n===============\n");
+                p("error CacheGetThread: " + cache.getCacheName() + " : " + e + " : cause: " + e.getCause() + "\n===============\n");
             }
             ai.incrementAndGet();
         }

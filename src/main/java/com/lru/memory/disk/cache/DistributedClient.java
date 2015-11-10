@@ -27,6 +27,15 @@ public class DistributedClient {
         this.distResponseCache = new DistributedResponseCache("distRespCache", 3900);
     }
     
+    DistributedRequestResponse<Serializable> distCacheGet(String cacheName, String key, 
+            DistributedConfigServer clusterServerForCacheKey) throws BadRequestException, SocketException, IOException, ClassNotFoundException {
+        if(config.isCacheDistributedResponse()){
+            return internalGetCachedDistResponse(cacheName, key, clusterServerForCacheKey);
+        }else{
+            return internalDistributedCacheGet(cacheName, key, clusterServerForCacheKey);
+        }
+    }
+    
     private static String getKeyForCacheDistResponse(String cacheName, String key){
         return (cacheName + key);
     }
@@ -44,7 +53,7 @@ public class DistributedClient {
      * @throws IOException
      * @throws ClassNotFoundException 
      */
-    DistributedRequestResponse<Serializable> getCachedDistResponse(String cacheName, String key, 
+    private DistributedRequestResponse<Serializable> internalGetCachedDistResponse(String cacheName, String key, 
             DistributedConfigServer clusterServerForCacheKey) throws BadRequestException, SocketException, IOException, ClassNotFoundException {
         
         if(Utl.areBlank(cacheName, key)) throw new BadRequestException("DistributedManger.distributedCacheGet: cacheName, key is blank", null);
@@ -72,7 +81,7 @@ public class DistributedClient {
             p("getCachedDistResponse: Unable to get from distResponseCache: " + cacheName + ", key: " + key + " : " + e);
         }
         
-        DistributedRequestResponse<Serializable> distributedCacheGet = distributedCacheGet(cacheName, key, clusterServerForCacheKey);        
+        DistributedRequestResponse<Serializable> distributedCacheGet = internalDistributedCacheGet(cacheName, key, clusterServerForCacheKey);        
         
         try{            
             if( (null != distributedCacheGet) && (distributedCacheGet.getServerSetErrorLevel() <= DistributedServer.ServerErrorLevelDistributedResponseCacheable) ){
@@ -89,7 +98,7 @@ public class DistributedClient {
         return distributedCacheGet;
     }
     
-    DistributedRequestResponse<Serializable> distributedCacheGet(String cacheName, String key, 
+    private DistributedRequestResponse<Serializable> internalDistributedCacheGet(String cacheName, String key, 
             DistributedConfigServer clusterServerForCacheKey) throws BadRequestException, SocketException, IOException, ClassNotFoundException {
         
         if(Utl.areBlank(cacheName, key)) throw new BadRequestException("DistributedManger.distributedCacheGet: cacheName, key is blank", null);

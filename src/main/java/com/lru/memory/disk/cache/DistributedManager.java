@@ -23,6 +23,7 @@ class DistributedManager {
     private final String clusterConfig;
     private final AtomicBoolean foundSelf = new AtomicBoolean(false);
     private final DistributedConfig config;
+
     
     private int numberOfClusterServers;
     private DistributedConfigServer selfServer;
@@ -30,6 +31,7 @@ class DistributedManager {
     private DistributedClient distributedClient;
 
     DistributedManager(int serverPort, String clusterConfig, DistributedConfig config, AbstractCacheService<? extends Serializable>[] caches) throws Exception {
+        
         if(Utl.areBlank(clusterConfig)) throw new Exception("Cluster config is blank.");
         
         if((null == caches) || (caches.length < 1)) throw new Exception("No caches passed in.");
@@ -41,15 +43,16 @@ class DistributedManager {
         this.serverPort = serverPort;
         this.clusterConfig = clusterConfig;        
         this.config = config;
-        this.standAlone = false;
+        this.standAlone = false; 
         
         this.server = new DistributedServer(serverPort, this);
         //Don't start server here, server is started by Distributor
         
         this.distributedClient = new DistributedClient(this);
         
+        //These need to happen last because createCacheMap depends on this.distributedClient
         createClusterServers(clusterConfig);
-        createCacheMap(caches);     
+        createCacheMap(caches);       
     }
     
     Runnable getServerRequestProcessor(Socket socket, DistributedManager distributedManager){
