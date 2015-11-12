@@ -133,7 +133,7 @@ public class Utl {
         ObjectInputStream ois = null;
         try {
             f = new File(pathAndFilename);
-            if (!f.exists()) {
+            if (! f.exists()) {
                 return null;
             }
 
