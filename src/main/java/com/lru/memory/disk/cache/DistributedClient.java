@@ -10,13 +10,17 @@ import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
-import static com.lru.memory.disk.cache.Utl.p;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author sathayeg
  */
 public class DistributedClient {
+    
+    private static final Logger log = LoggerFactory.getLogger(DistributedClient.class);
+    
     private final DistributedManager distMgr;
     private final DistributedConfig config;
     private final DistributedResponseCache distResponseCache;
@@ -67,18 +71,17 @@ public class DistributedClient {
                 if(null != ser){
                     try{
                         DistributedRequestResponse<Serializable> distrr = (DistributedRequestResponse<Serializable>) ser;
-                        p("getCachedDistResponse, returing cached dist response for cache name: " + cacheName + ", key: " + key);
                         return distrr;
                     }catch(Exception e){
-                        p("getCachedDistResponse: Unable to case ser to distrr for cache name: " + cacheName + ", key: " + key + " : " + e);
+                        log.error("Unable to cast Serializable to DistributedRequestResponse for cache name: " + cacheName + ", key: " + key, e);
                     }
                 }
             }else if( (null != cacheEntry) && (cacheEntry.isTtlExpired()) ){
-                p("getCachedDistResponse, cacheEntry expired for cache name: " + cacheName + ", key: " + key);
+                //("getCachedDistResponse, cacheEntry expired for cache name: " + cacheName + ", key: " + key);
             }
            
         }catch(Exception e){
-            p("getCachedDistResponse: Unable to get from distResponseCache: " + cacheName + ", key: " + key + " : " + e);
+            log.error("Unable to get from distResponseCache: " + cacheName + ", key: " + key , e);
         }
         
         DistributedRequestResponse<Serializable> distributedCacheGet = internalDistributedCacheGet(cacheName, key, clusterServerForCacheKey);        
@@ -89,10 +92,10 @@ public class DistributedClient {
                 cacheEntry = new CacheEntry<>(distributedCacheGet, System.currentTimeMillis());
                 cacheEntry.setTtl(DistributedConfig.DistributedCachedEntryTtlMillis);
                 distResponseCache.putOnly(getKeyForCacheDistResponse(cacheName, key), cacheEntry);
-                p("getCachedDistResponse, put in distResponseCache for cache name: " + cacheName + ", key: " + key);
+                //("getCachedDistResponse, put in distResponseCache for cache name: " + cacheName + ", key: " + key);
             }
         }catch(Exception e){
-            p("getCachedDistResponse: Unable to put in distResponseCache for cache name: " + cacheName + ", key: " + key + " : " + e);
+            log.error("Unable to put in distResponseCache for cache name: " + cacheName + ", key: " + key, e);
         }                
         
         return distributedCacheGet;

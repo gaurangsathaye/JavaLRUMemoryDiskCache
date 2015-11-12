@@ -1,6 +1,5 @@
 package com.lru.memory.disk.cache;
 
-import static com.lru.memory.disk.cache.Utl.p;
 import com.lru.memory.disk.cache.exceptions.BadRequestException;
 import com.lru.memory.disk.cache.exceptions.InvalidCacheConfigurationException;
 import com.lru.memory.disk.cache.exceptions.LoadDataIsNullException;
@@ -22,7 +21,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AbstractCacheService<T> implements DiskOps {
     
-    Logger log = LoggerFactory.getLogger(AbstractCacheService.class);
+    private static final Logger log = LoggerFactory.getLogger(AbstractCacheService.class);
 
     private static final String KeyInternalGetFromDisk = "f";
     private static final String KeyInternalGetCachedObj = "o";
@@ -50,10 +49,25 @@ public abstract class AbstractCacheService<T> implements DiskOps {
     private boolean distributed;
     private DistributedClient distClient;
 
+    /**
+     * 
+     * @param cacheName
+     * @param cacheSize
+     * @throws Exception 
+     */
     public AbstractCacheService(String cacheName, int cacheSize) throws Exception {
         this(cacheName, cacheSize, false, null);
     }
-
+    
+    /**
+     * 
+     * @param cacheName
+     * @param cacheSize
+     * @param diskPersist
+     * @param dataDirectory
+     * @throws InvalidCacheConfigurationException
+     * @throws Exception 
+     */
     public AbstractCacheService(String cacheName, int cacheSize, boolean diskPersist, String dataDirectory) throws InvalidCacheConfigurationException, Exception {
         if (Utl.areBlank(cacheName) || cacheSize < 1) {
             throw new InvalidCacheConfigurationException("cacheName and/or cacheSize invalid", null);
@@ -79,7 +93,7 @@ public abstract class AbstractCacheService<T> implements DiskOps {
         if (this.persist) {
             this.dataDir = dataDirectory.trim().replaceAll("/$", "");
             init();
-        }
+        }        
     }
 
     public abstract boolean isCacheItemValid(T o);
@@ -90,7 +104,7 @@ public abstract class AbstractCacheService<T> implements DiskOps {
         return this.cacheName;
     }
 
-    public T get(String key) throws Exception {//throws Exception {
+    public T get(String key) throws Exception {
         if (Utl.areBlank(key)) {
             throw new BadRequestException("key is blank", null);
         }
@@ -107,7 +121,7 @@ public abstract class AbstractCacheService<T> implements DiskOps {
     }
 
     //Returns null or cached object or throws exceptions
-    T getDistributed(String key) throws LoadDataIsNullException, BadRequestException {      
+    T getDistributed(String key) throws LoadDataIsNullException, BadRequestException, InvalidCacheConfigurationException {      
         DistributedConfigServer clusterServerForCacheKey = null;
         try {
             if (Utl.areBlank(key)) {
@@ -115,8 +129,7 @@ public abstract class AbstractCacheService<T> implements DiskOps {
             }
 
             clusterServerForCacheKey = this.distMgr.getClusterServerForCacheKey(key);
-            log.info("distributed request info: server for key: " + key + 
-                    ", cluster server: "+ clusterServerForCacheKey.toString());
+            if(null == clusterServerForCacheKey) throw new InvalidCacheConfigurationException("Cluster server for key: " + key + ", is null.  Check distributed configuration", null);
 
             if (clusterServerForCacheKey.isSelf() || (! clusterServerForCacheKey.tryRemote())) {
                 return null;
@@ -125,7 +138,7 @@ public abstract class AbstractCacheService<T> implements DiskOps {
             this.statsRemoteAttempts.incrementAndGet();
             
             DistributedRequestResponse<Serializable> distrr = this.distClient.distCacheGet(cacheName, key, clusterServerForCacheKey);
-            p("distrr for key: " + key + " :: " + distrr.toString());
+            log.info("Cache name: " + cacheName + ", distrr for key: " + key + " :: " + distrr.toString());
 
             if (distrr.getServerSetErrorLevel() >= DistributedServer.ServerErrorLevelSevere) {
                 this.statsRemoteSevereErrs.incrementAndGet();
@@ -138,7 +151,7 @@ public abstract class AbstractCacheService<T> implements DiskOps {
                 try {
                     return ((T) serverSetData);
                 } catch (Exception e) {
-                    p("error: Unable to cast remote data for key: " + key + " :: " + e);
+                    log.error("Cache name: " + cacheName + ". Unable to cast remote data for key: " + key , e);
                     this.statsRemoteSevereErrs.incrementAndGet();
                     clusterServerForCacheKey.setSevereErrorNextAttemptTimestamp();
                     return null;
@@ -148,20 +161,23 @@ public abstract class AbstractCacheService<T> implements DiskOps {
             }
 
         } catch (BadRequestException e) {
-            p("error: AbstractCacheService.getDistributed: key: " + key + " :: " + e);
+            log.error("Cache name: " + cacheName + ". Unable to getDistributed(): key: " + key, e);
+            throw e;
+        }catch(InvalidCacheConfigurationException e){
+            log.error("Cache name: " + cacheName + ". Unable to getDistributed(): key: " + key, e);
             throw e;
         } catch (SocketException e) {
-            p("error: AbstractCacheService.getDistributed: key: " + key + " :: " + e);
+            log.error("Cache name: " + cacheName + ". Unable to getDistributed(): key: " + key, e);
             this.statsRemoteNetworkErrs.incrementAndGet();
-            clusterServerForCacheKey.setNetworkErrorNextAttemptTimestamp();
+            if(null != clusterServerForCacheKey) clusterServerForCacheKey.setNetworkErrorNextAttemptTimestamp();
         } catch (IOException e) {
-            p("error: AbstractCacheService.getDistributed: key: " + key + " :: " + e);
+            log.error("Cache name: " + cacheName + ". Unable to getDistributed(): key: " + key, e);
             this.statsRemoteNetworkErrs.incrementAndGet();
-            clusterServerForCacheKey.setNetworkErrorNextAttemptTimestamp();
+            if(null != clusterServerForCacheKey) clusterServerForCacheKey.setNetworkErrorNextAttemptTimestamp();
         } catch (ClassNotFoundException e) {
-            p("error: AbstractCacheService.getDistributed: key: " + key + " :: " + e);
+            log.error("Cache name: " + cacheName + ". Unable to getDistributed(): key: " + key, e);
             this.statsRemoteSevereErrs.incrementAndGet();
-            clusterServerForCacheKey.setSevereErrorNextAttemptTimestamp();
+            if(null != clusterServerForCacheKey) clusterServerForCacheKey.setSevereErrorNextAttemptTimestamp();
         }
         return null;
     }

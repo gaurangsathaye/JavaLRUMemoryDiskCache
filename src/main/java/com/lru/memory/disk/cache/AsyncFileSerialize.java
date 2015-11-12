@@ -1,13 +1,17 @@
 package com.lru.memory.disk.cache;
 
-import static com.lru.memory.disk.cache.Utl.p;
 import java.io.Serializable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author sathayeg
  */
 public class AsyncFileSerialize implements Runnable{
+    
+    private static final Logger log = LoggerFactory.getLogger(AsyncFileSerialize.class);
+
     
     private final String pathAndFilename;
     private final Serializable obj;
@@ -22,7 +26,7 @@ public class AsyncFileSerialize implements Runnable{
         try{
             Utl.serializeFile(pathAndFilename, obj);
         }catch(Exception e){
-            p("AsyncSerialize error: " + e);
+            log.error("Unable to serialize file: " + pathAndFilename, e);
         }
     }
     

@@ -10,12 +10,16 @@ import java.security.MessageDigest;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author sathayeg
  */
 public class Utl {
+    
+    private static final Logger log = LoggerFactory.getLogger(Utl.class);
 
     private static ExecutorService globalExecutorService = null;
     private static CacheLockManager globalCacheLockManager = null;
@@ -32,7 +36,7 @@ public class Utl {
             }
             globalExecutorService.execute(r);
         } catch (Exception e) {
-            p("error offering to global executor service");
+            log.error("Unable to excecute on global executor service", e);
         }
     }
 
@@ -88,16 +92,16 @@ public class Utl {
             fos = new FileOutputStream(pathAndFilename, false);
             oos = new ObjectOutputStream(fos);
             oos.writeObject(obj);
-            p("Utl.serialize : to: " + pathAndFilename);
+            log.info("Utl.serialize : to: " + pathAndFilename);
         } catch (Exception e) {
-            p("error: Utl.serialize: " + pathAndFilename + " :: " + e);
+            log.error("Unable to serialize: " + pathAndFilename, e);
         } finally {
             try {
-                fos.close();
+                if(null != fos) fos.close();
             } catch (Exception e) {
             }
             try {
-                oos.close();
+                if(null != oos) oos.close();
             } catch (Exception e) {
             }
             writeLock.unlock();
@@ -111,9 +115,11 @@ public class Utl {
             File f = new File(pathAndFilename);
             if(f.exists() && (! f.isDirectory())){
                 f.delete();
-                p("deleteFile: " + pathAndFilename);
+                log.info("Utl.deleteFile: " + pathAndFilename);
             }
-        }catch(Exception e){}
+        }catch(Exception e){
+            log.error("Unable to delete file: " + pathAndFilename, e);
+        }
         finally{
             writeLock.unlock();
         }
@@ -134,15 +140,16 @@ public class Utl {
             fis = new FileInputStream(f);
             ois = new ObjectInputStream(fis);
             Serializable serializable = ((Serializable) (ois.readObject()));
-            p("deserializeFile: " + pathAndFilename);
+            log.info("deserializeFile: " + pathAndFilename);
             return serializable;
         } catch (Exception e) {
-            p("Utl.deserialize error: " + e);
+            log.error("Unable to deserialize: " + pathAndFilename, e);
             //Don't throw any errors here, delete the existing file
             //This may have been due to deserialization incompatibilities from serial version uid or cached item code changes, etc.
             try {
                 if(null != f) f.delete();
             } catch (Exception exd) {
+                log.error("Unable to delete, (unable to deserialze): " + pathAndFilename, e);
             }
             return null;
         } finally {
@@ -156,9 +163,5 @@ public class Utl {
             }
             readLock.unlock();
         }
-    }
-
-    static void p(Object o) {
-        System.out.println(o);
     }
 }

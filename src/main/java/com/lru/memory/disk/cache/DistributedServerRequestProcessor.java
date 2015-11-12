@@ -6,14 +6,16 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.net.Socket;
-
-import static com.lru.memory.disk.cache.Utl.p;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author sathayeg
  */
 class DistributedServerRequestProcessor implements Runnable {
+    
+    private static final Logger log = LoggerFactory.getLogger(DistributedServerRequestProcessor.class);
     
     private final Socket clientSocket;
     private final DistributedManager distMgr;
@@ -86,7 +88,7 @@ class DistributedServerRequestProcessor implements Runnable {
                 distrr.setServerSetData(cache.getNonDistributed(cacheKey));
                 distrr.setServerSetErrorLevel(DistributedServer.ServerErrorLevelCacheGetAllOk);
             }catch(Exception e){
-                p("DistributedServerRequestProcessor: error getNonDistributed key: " + cacheKey + " : " + e);
+                log.error("Unable to getNonDistributed(), cache name: " + cacheName + ", key: " + cacheKey, e);
                 distrr.setServerSetData(null);
                 distrr.setServerSetErrorLevel(DistributedServer.ServerErrorLevelCacheGetException);
             }
@@ -96,6 +98,7 @@ class DistributedServerRequestProcessor implements Runnable {
             oos.writeObject(distrr);
             oos.flush(); 
         }catch(Exception e){
+            log.error("Server unable to process", e);
         }finally{
             Utl.closeAll(closeables);
         }
