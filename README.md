@@ -114,6 +114,12 @@ Blog techBlog = blogsMemOnlyCache.get("blogID");
     <groupId>com.lru.memory.disk.cache</groupId>
     <artifactId>JavaLRUMemoryDiskCache</artifactId>
     <version>1.1</version>
+    <exclusions>
+        <exclusion> 
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+        </exclusion>
+    </exclusions>
 </dependency>
 ```
 
