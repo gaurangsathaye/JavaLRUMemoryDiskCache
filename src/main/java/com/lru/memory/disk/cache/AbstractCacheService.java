@@ -39,6 +39,7 @@ public abstract class AbstractCacheService<T> implements DiskOps {
     private final AtomicLong statsRemoteSevereErrs;
     private final AtomicLong statsRemoteAttempts;
     private final AtomicLong statsLocalAttempts;
+    private final AtomicLong statsRemoteCachedResponses;
     private final String cacheName;
     private final int cacheSize;
     private final Map<String, Object> statsMap;
@@ -85,6 +86,7 @@ public abstract class AbstractCacheService<T> implements DiskOps {
         this.statsRemoteSevereErrs = new AtomicLong(0L);
         this.statsRemoteAttempts = new AtomicLong(0L);
         this.statsLocalAttempts = new AtomicLong(0L);
+        this.statsRemoteCachedResponses = new AtomicLong(0L);
         this.cacheSize = cacheSize;
         this.statsMap = new HashMap<>();
         this.persist = diskPersist;
@@ -137,7 +139,7 @@ public abstract class AbstractCacheService<T> implements DiskOps {
             
             this.statsRemoteAttempts.incrementAndGet();
             
-            DistributedRequestResponse<Serializable> distrr = this.distClient.distCacheGet(cacheName, key, clusterServerForCacheKey);
+            DistributedRequestResponse<Serializable> distrr = this.distClient.distCacheGet(cacheName, key, clusterServerForCacheKey, this.statsRemoteCachedResponses);
             log.info("Cache name: " + cacheName + ", distrr for key: " + key + " :: " + distrr.toString());
 
             if (distrr.getServerSetErrorLevel() >= DistributedServer.ServerErrorLevelSevere) {
@@ -233,7 +235,8 @@ public abstract class AbstractCacheService<T> implements DiskOps {
         statsMap.put("hitsMemory", statsHitsMemory.get());
         statsMap.put("remoteErrNetwork", this.statsRemoteNetworkErrs.get());
         statsMap.put("remoteErrSevere", this.statsRemoteSevereErrs.get());
-        statsMap.put("remoteAttempts", this.statsRemoteAttempts);
+        statsMap.put("remoteAttempts", this.statsRemoteAttempts.get());
+        statsMap.put("remoteCachedResponses", this.statsRemoteCachedResponses.get());
         statsMap.put("localAttempts", this.statsLocalAttempts.get());
         statsMap.put("misses", misses);
         statsMap.put("hitratio",

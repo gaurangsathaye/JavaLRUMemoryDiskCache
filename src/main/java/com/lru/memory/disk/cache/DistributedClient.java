@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,9 +33,9 @@ public class DistributedClient {
     }
     
     DistributedRequestResponse<Serializable> distCacheGet(String cacheName, String key, 
-            DistributedConfigServer clusterServerForCacheKey) throws BadRequestException, SocketException, IOException, ClassNotFoundException {
+            DistributedConfigServer clusterServerForCacheKey, AtomicLong remoteCachedResponses) throws BadRequestException, SocketException, IOException, ClassNotFoundException {
         if(config.isCacheDistributedResponse()){
-            return internalGetCachedDistResponse(cacheName, key, clusterServerForCacheKey);
+            return internalGetCachedDistResponse(cacheName, key, clusterServerForCacheKey, remoteCachedResponses);
         }else{
             return internalDistributedCacheGet(cacheName, key, clusterServerForCacheKey);
         }
@@ -57,8 +58,7 @@ public class DistributedClient {
      * @throws IOException
      * @throws ClassNotFoundException 
      */
-    private DistributedRequestResponse<Serializable> internalGetCachedDistResponse(String cacheName, String key, 
-            DistributedConfigServer clusterServerForCacheKey) throws BadRequestException, SocketException, IOException, ClassNotFoundException {
+    private DistributedRequestResponse<Serializable> internalGetCachedDistResponse(String cacheName, String key, DistributedConfigServer clusterServerForCacheKey, AtomicLong remoteCachedResponses) throws BadRequestException, SocketException, IOException, ClassNotFoundException {
         
         if(Utl.areBlank(cacheName, key)) throw new BadRequestException("DistributedManger.distributedCacheGet: cacheName, key is blank", null);
         if(null == clusterServerForCacheKey) throw new BadRequestException("clusterServerForCacheKey is null", null);
@@ -71,6 +71,7 @@ public class DistributedClient {
                 if(null != ser){
                     try{
                         DistributedRequestResponse<Serializable> distrr = (DistributedRequestResponse<Serializable>) ser;
+                        remoteCachedResponses.incrementAndGet();
                         return distrr;
                     }catch(Exception e){
                         log.error("Unable to cast Serializable to DistributedRequestResponse for cache name: " + cacheName + ", key: " + key, e);

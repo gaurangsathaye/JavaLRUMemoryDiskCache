@@ -35,12 +35,12 @@ public class ExampleUsageMemoryAndDisk2 {
      Create the cache with the cache name and the number of items you want to keep in the cache.
      */
     static void runExample() throws Exception {
-        ExecutorService pool = Executors.newFixedThreadPool(3);
+        ExecutorService pool = Executors.newFixedThreadPool(20);
         
         final Map<String, AtomicInteger> map  = new HashMap<>();
         map.put("ct", new AtomicInteger(0));
         
-        int total = 600;
+        int total = 390;
         
         long start = System.currentTimeMillis();
         for(int i=0;i<total;i++){
@@ -53,10 +53,8 @@ public class ExampleUsageMemoryAndDisk2 {
                     long start = System.currentTimeMillis();
                     long end = 0L;
                     try{
-                        //p("pre cache get: " + key);
                         cache.get(key);
                         end = System.currentTimeMillis() - start;
-                        p("post cache get: " + key);
                     }catch(Exception e){
                         p("Fatal: " + e + " : cause: " + e.getCause());
                     }
@@ -64,7 +62,6 @@ public class ExampleUsageMemoryAndDisk2 {
                     p("time: " + end + ", done:" + id + " : " + key + " : " + cache.getStats() + cache.getPathToFile(key));
                     
                     map.get("ct").incrementAndGet();
-                    p("incremented ct: " + map.get("ct").get());
                     return null;
                 }
             }));
@@ -73,6 +70,7 @@ public class ExampleUsageMemoryAndDisk2 {
         while(true){
             p("ct: " + map.get("ct").get() + ", time: " + (System.currentTimeMillis() - start));
             if(map.get("ct").get() >= total){
+                p(cache.getStats());
                 System.exit(0);
             }
             try{Thread.sleep(2000);}catch(Exception e){}

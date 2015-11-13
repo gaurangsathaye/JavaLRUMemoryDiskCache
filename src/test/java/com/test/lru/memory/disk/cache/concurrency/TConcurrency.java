@@ -3,7 +3,10 @@ package com.test.lru.memory.disk.cache.concurrency;
 import com.lru.memory.disk.cache.AbstractCacheService;
 
 /**
- *
+ * This illustrates multi level write concurrency.
+ *  For example a long load time when key is 'sleep' does
+ *  not affect loading data and cache puts of other keys.
+ * 
  * @author sathayeg
  */
 public class TConcurrency {
@@ -69,7 +72,7 @@ public class TConcurrency {
                 p("key is sleep");
                 long start = System.currentTimeMillis();
                 try{Thread.sleep(3000);}catch(Exception e){}
-                //p("key sleep end: " + (System.currentTimeMillis() - start));
+                p("key sleep end: " + (System.currentTimeMillis() - start));
             }            
             return "data:" + key;
         }

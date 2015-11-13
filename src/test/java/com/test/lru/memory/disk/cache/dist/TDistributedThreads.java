@@ -27,10 +27,10 @@ public class TDistributedThreads {
         }
     }
     
-    static int cacheSize = 1000;
-    static int loopCount = 1;
-    static int randomRange = 1;
-    static int threadPoolSize = 10;
+    static int cacheSize = 200;
+    static int loopCount = 500;
+    static int randomRange = 220;
+    static int threadPoolSize = 200;
     void distribute() throws Exception {
         p("start distribute");
         Cache cache1 = new Cache("teaCache", cacheSize, true, "./datadir/server1/teacache", new Dao("server1"));
@@ -41,8 +41,8 @@ public class TDistributedThreads {
         List<Cache> cacheList = new ArrayList<>();
         cacheList.add(cache1);
         cacheList.add(cache2);
-        //cacheList.add(cache3);
-        //cacheList.add(cache4);
+        cacheList.add(cache3);
+        cacheList.add(cache4);
 
         String clusterConfig = "127.0.0.1:19000, 127.0.0.1:19001";
 
