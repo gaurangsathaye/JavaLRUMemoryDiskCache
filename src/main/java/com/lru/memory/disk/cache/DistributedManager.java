@@ -16,21 +16,27 @@ import java.util.concurrent.atomic.AtomicBoolean;
 class DistributedManager {
         
     private int serverPort;
-    private final List<DistributedConfigServer> clusterServers = new ArrayList<>();
-    private final Map<String, DistributedConfigServer> clusterServerMap = new HashMap<>();
-    private final Map<String, AbstractCacheService<? extends Serializable>> cacheMap = new HashMap<>();
-    private final DistributedServer server;
-    private final String clusterConfig;
-    private final AtomicBoolean foundSelf = new AtomicBoolean(false);
-    private final DistributedConfig config;
+    private List<DistributedConfigServer> clusterServers = new ArrayList<>();
+    private Map<String, DistributedConfigServer> clusterServerMap = new HashMap<>();
+    private Map<String, AbstractCacheService<? extends Serializable>> cacheMap = new HashMap<>();
+    private DistributedServer server;
+    private String clusterConfig;
+    private AtomicBoolean foundSelf = new AtomicBoolean(false);
+    private DistributedConfig config;
 
     
     private int numberOfClusterServers;
     private DistributedConfigServer selfServer;
     private boolean standAlone = false;
     private DistributedClient distributedClient;
+    
+    static DistributedManager getDistributedManagerForInApp(int serverPort, String clusterConfig, DistributedConfig config, AbstractCacheService<? extends Serializable>[] caches) throws Exception {
+        return new DistributedManager(serverPort, clusterConfig, config, caches);
+    }
 
-    DistributedManager(int serverPort, String clusterConfig, DistributedConfig config, AbstractCacheService<? extends Serializable>[] caches) throws Exception {
+
+    //For in-app distributed caching
+    private DistributedManager(int serverPort, String clusterConfig, DistributedConfig config, AbstractCacheService<? extends Serializable>[] caches) throws Exception {
         
         if(Utl.areBlank(clusterConfig)) throw new Exception("Cluster config is blank.");
         
@@ -45,7 +51,7 @@ class DistributedManager {
         this.config = config;
         this.standAlone = false; 
         
-        this.server = new DistributedServer(serverPort, this);
+        this.server = new DistributedServer(this);
         //Don't start server here, server is started by Distributor
         
         this.distributedClient = new DistributedClient(this);
@@ -53,6 +59,19 @@ class DistributedManager {
         //These need to happen last because createCacheMap depends on this.distributedClient
         createClusterServers(clusterConfig);
         createCacheMap(caches);       
+    }
+    
+    //For stand alone cache server
+    private DistributedManager(int serverPort, DistributedConfig config, AbstractCacheService<? extends Serializable> standAloneServerCache) throws Exception{
+        if(serverPort < 1) throw new Exception("Invalid port number: " + serverPort + ", serverPort must be between 1 and 65535 inclusive.");
+        
+        if(null == config) throw new Exception("Config is null, please pass in Config");
+        
+        this.serverPort = serverPort;
+        this.config = config;
+        this.standAlone = true;
+        
+        this.server = new DistributedServer(this);
     }
     
     Runnable getServerRequestProcessor(Socket socket, DistributedManager distributedManager){

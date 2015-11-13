@@ -23,15 +23,16 @@ class DistributedServer implements Runnable {
     static final byte ServerErrorLevelCacheGetException = 2;
     static final byte ServerErrorLevelCacheGetAllOk = 1;
     static final byte ServerErrorLevelNotSet = 0;
+    
         
     private ServerSocket serverSocket = null;
     private ExecutorService threadPool = null;
     private final int port;   
     private final DistributedManager distributedManager;
 
-    DistributedServer(int port, DistributedManager distributedManager) {
-        this.port = port;
+    DistributedServer(DistributedManager distributedManager) {
         this.distributedManager = distributedManager;
+        this.port = this.distributedManager.getServerPort();
         threadPool = Executors.newFixedThreadPool(this.distributedManager.getConfig().getServerThreadPoolSize());
     }
 

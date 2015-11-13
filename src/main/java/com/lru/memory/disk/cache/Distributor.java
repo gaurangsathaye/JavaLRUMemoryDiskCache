@@ -38,7 +38,7 @@ public class Distributor {
             throw new Exception("Distributed caches already created on port: " + listenPort);
         }
         
-        DistributedManager distributedManager = new DistributedManager(listenPort, cluster, config, caches);
+        DistributedManager distributedManager = DistributedManager.getDistributedManagerForInApp(listenPort, cluster, config, caches);
         distMgrMap.put(Integer.toString(listenPort), distributedManager);
         
         distributedManager.startServer();
