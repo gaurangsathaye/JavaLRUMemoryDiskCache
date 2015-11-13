@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author sathayeg
  */
-public class DistributedClient {
+class DistributedClient {
     
     private static final Logger log = LoggerFactory.getLogger(DistributedClient.class);
     

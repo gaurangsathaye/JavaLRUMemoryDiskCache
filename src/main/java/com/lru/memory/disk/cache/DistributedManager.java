@@ -30,10 +30,11 @@ class DistributedManager {
     private boolean standAlone = false;
     private DistributedClient distributedClient;
     
+    private ServerCache standAloneServerCache;
+    
     static DistributedManager getDistributedManagerForInApp(int serverPort, String clusterConfig, DistributedConfig config, AbstractCacheService<? extends Serializable>[] caches) throws Exception {
         return new DistributedManager(serverPort, clusterConfig, config, caches);
     }
-
 
     //For in-app distributed caching
     private DistributedManager(int serverPort, String clusterConfig, DistributedConfig config, AbstractCacheService<? extends Serializable>[] caches) throws Exception {
@@ -62,21 +63,25 @@ class DistributedManager {
     }
     
     //For stand alone cache server
-    private DistributedManager(int serverPort, DistributedConfig config, AbstractCacheService<? extends Serializable> standAloneServerCache) throws Exception{
+    private DistributedManager(int serverPort, DistributedConfig config, ServerCache standAloneServerCache) throws Exception{
         if(serverPort < 1) throw new Exception("Invalid port number: " + serverPort + ", serverPort must be between 1 and 65535 inclusive.");
         
         if(null == config) throw new Exception("Config is null, please pass in Config");
         
+        if(null == standAloneServerCache) throw new Exception("Stand alone server cache is null");
+        
         this.serverPort = serverPort;
         this.config = config;
         this.standAlone = true;
+        
+        this.standAloneServerCache = standAloneServerCache;
         
         this.server = new DistributedServer(this);
     }
     
     Runnable getServerRequestProcessor(Socket socket, DistributedManager distributedManager){
         if(this.standAlone){
-            return null;
+            return new ServerRequestProcessor(socket, this.standAloneServerCache);
         }else{
             return new DistributedServerRequestProcessor(socket, distributedManager);
         }
