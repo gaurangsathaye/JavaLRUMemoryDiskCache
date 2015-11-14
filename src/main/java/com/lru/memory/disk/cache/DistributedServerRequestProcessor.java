@@ -17,11 +17,11 @@ class DistributedServerRequestProcessor implements Runnable {
     
     private static final Logger log = LoggerFactory.getLogger(DistributedServerRequestProcessor.class);
     
-    private final Socket clientSocket;
+    private final Socket socket;
     private final DistributedManager distMgr;
     
     public DistributedServerRequestProcessor(Socket clientSocket, DistributedManager dm) {
-        this.clientSocket = clientSocket;
+        this.socket = clientSocket;
         this.distMgr = dm;
     }
 
@@ -33,10 +33,10 @@ class DistributedServerRequestProcessor implements Runnable {
         ObjectOutputStream oos = null;
         ObjectInputStream ois = null;
         
-        AutoCloseable closeables[] = {is, os, oos, ois, clientSocket};
+        AutoCloseable closeables[] = {is, os, oos, ois, socket};
         
         try{            
-            is = clientSocket.getInputStream();           
+            is = socket.getInputStream();           
             ois = new ObjectInputStream(is);
             DistributedRequestResponse<Serializable> distrr = (DistributedRequestResponse<Serializable>) ois.readObject();
             String cacheKey = distrr.getClientSetCacheKey();
@@ -77,7 +77,7 @@ class DistributedServerRequestProcessor implements Runnable {
             }
             
             if(sendError){
-                os = clientSocket.getOutputStream();
+                os = socket.getOutputStream();
                 oos = new ObjectOutputStream(os);
                 oos.writeObject(distrr);
                 oos.flush();
@@ -93,7 +93,7 @@ class DistributedServerRequestProcessor implements Runnable {
                 distrr.setServerSetErrorLevel(DistributedServer.ServerErrorLevelCacheGetException);
             }
             
-            os = clientSocket.getOutputStream();
+            os = socket.getOutputStream();
             oos = new ObjectOutputStream(os);
             oos.writeObject(distrr);
             oos.flush(); 

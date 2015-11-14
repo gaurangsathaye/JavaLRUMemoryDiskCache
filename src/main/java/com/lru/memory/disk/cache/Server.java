@@ -18,7 +18,7 @@ public class Server {
     private static int port = 23290;
     private static int serverThreads = 200;
     private static int cacheSize = 50000;
-    private static String diskCacheDir = null;
+    private static String diskCacheDir;
 
     private static DistributedConfig distConfig;
     private static ServerCache cache;
@@ -37,7 +37,7 @@ public class Server {
         }
         
         distMgr = DistributedManager.getDistributedManagerForStandalone(port, distConfig, cache);
-
+        distMgr.startServer();
     } //end main
 
     static void getSetupInfo() {
