@@ -57,7 +57,7 @@ class DistributedServer implements Runnable {
         try{
             startServer();
         }catch(Exception e){
-            String err = "Unable to start server on port: " + port + " : " + e.getMessage() + ", cause: " + e.getCause();
+            String err = "Unable to run server on port: " + port + " : " + e.getMessage() + ", cause: " + e.getCause();
             throw new RuntimeException(err, e);
         }
     }

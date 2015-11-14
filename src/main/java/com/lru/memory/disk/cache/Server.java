@@ -9,45 +9,74 @@ import org.slf4j.LoggerFactory;
  */
 public class Server {
 
-    private static final String Usage = "java com.lru.memory.disk.cache.CacheServer port [serverThreadPoolSize] [diskDataDirectory]";
-
     private static final Logger log = LoggerFactory.getLogger(Server.class);
 
-    private static String[] tArgs;
+    private static final String Usage = "java -Dport=23290 -Dcache.size=50000 -Ddisk.cache.dir=\"./standalone/cache\" -Dserver.threads=200 com.lru.memory.disk.cache.CacheServer";
 
-    public static void main(String[] args) {
-        if ((null == args) || (args.length < 1)) {
-            log.error("Invalid arguments, usage: " + Usage);
-            System.exit(1);
-            return;
+    public static final String CacheName = "stand_alone_cache";
+
+    private static int port = 23290;
+    private static int serverThreads = 200;
+    private static int cacheSize = 50000;
+    private static String diskCacheDir = null;
+
+    private static DistributedConfig distConfig;
+    private static ServerCache cache;
+    private static DistributedManager distMgr;
+
+    public static void main(String[] args) throws Exception {
+        distConfig = new DistributedConfig(serverThreads,
+                DistributedConfig.getDefaultClientConnectTimeoutMillis(),
+                DistributedConfig.getDefaultClientReadTimeoutMillis(),
+                DistributedConfig.isDefaultCacheDistributedResponse());
+
+        if (null == diskCacheDir) {
+            cache = new ServerCache(CacheName, cacheSize);
+        } else {
+            cache = new ServerCache(CacheName, cacheSize, true, diskCacheDir);
         }
+        
+        distMgr = DistributedManager.getDistributedManagerForStandalone(port, distConfig, cache);
 
-        int port = -1;
+    } //end main
+
+    static void getSetupInfo() {
         try {
-            port = Integer.parseInt(args[0]);
-            log.info("port: " + port);
+            port = Integer.parseInt(System.getProperty("port", Integer.toString(port)));
+            log.info("Port: " + port);
         } catch (Exception e) {
             log.error("Invalid port, usage: " + Usage);
             System.exit(1);
             return;
         }
 
-        int serverThreadPoolSize = -1;
-        if (args.length > 1) {
-            try {
-                serverThreadPoolSize = Integer.parseInt(args[1]);
-                log.info("server thread pool size: " + serverThreadPoolSize);
-            } catch (Exception e) {
-                log.error("Invalid server thread pool size, usage: " + Usage);
-                System.exit(1);
-                return;
+        try {
+            serverThreads = Integer.parseInt(System.getProperty("server.threads", Integer.toString(serverThreads)));
+            log.info("Server threads: " + serverThreads);
+        } catch (Exception e) {
+            log.error("Invalid server.threads, usage: " + Usage);
+            System.exit(1);
+            return;
+        }
+
+        try {
+            cacheSize = Integer.parseInt(System.getProperty("cache.size", Integer.toString(cacheSize)));
+            log.info("Cache size: " + cacheSize);
+        } catch (Exception e) {
+            log.error("Invalid cache.size, usage: " + Usage);
+            System.exit(1);
+            return;
+        }
+
+        String diskCacheDir = System.getProperty("disk.cache.dir");
+        if (diskCacheDir != null) {
+            diskCacheDir = diskCacheDir.trim();
+            if (Utl.areBlank(diskCacheDir)) {
+                diskCacheDir = null;
+            } else {
+                log.info("disk cache directory: " + diskCacheDir);
             }
         }
-        
-        String diskDataDirectory = null;
-        if(args.length > 2){
-            diskDataDirectory = args[2];
-            log.info("disk data directory: " + diskDataDirectory);
-        }
     }
-}
+
+} //end public class Server

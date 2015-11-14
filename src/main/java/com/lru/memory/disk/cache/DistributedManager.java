@@ -35,6 +35,10 @@ class DistributedManager {
     static DistributedManager getDistributedManagerForInApp(int serverPort, String clusterConfig, DistributedConfig config, AbstractCacheService<? extends Serializable>[] caches) throws Exception {
         return new DistributedManager(serverPort, clusterConfig, config, caches);
     }
+    
+    static DistributedManager getDistributedManagerForStandalone(int serverPort, DistributedConfig config, ServerCache standAloneServerCache) throws Exception{
+        return new DistributedManager(serverPort, config, standAloneServerCache);
+    }
 
     //For in-app distributed caching
     private DistributedManager(int serverPort, String clusterConfig, DistributedConfig config, AbstractCacheService<? extends Serializable>[] caches) throws Exception {
