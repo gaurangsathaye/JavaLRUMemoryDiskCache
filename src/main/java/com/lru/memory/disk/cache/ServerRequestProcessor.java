@@ -50,20 +50,12 @@ public class ServerRequestProcessor implements Runnable {
             isr = new InputStreamReader(is);
             br = new BufferedReader(isr);
 
-            String request = "";
-            StringBuilder sb = new StringBuilder();
-            do {
-                request = br.readLine();
-                sb.append(request);
-                if (request.contains("<end>")) {
-                    break;
-                }
-            } while ((null != request));
+            String request = readInput(br);
 
             os = socket.getOutputStream();
             pw = new PrintWriter(os, true);
 
-            String response = "From server, request: " + sb.toString();
+            String response = "From server, request: " + request;
 
             pw.println(response);
             os.flush();
@@ -76,15 +68,13 @@ public class ServerRequestProcessor implements Runnable {
     }
 
     static String readInput(BufferedReader br) throws IOException {
-        String request = "";
+        String request = null;
         StringBuilder sb = new StringBuilder();
-        do {
+        while(true) {
             request = br.readLine();
-            sb.append(request);
-            if (request.contains("<end>")) {
-                break;
-            }
-        } while ((null != request));
+            sb.append(request).append("\n");
+            if(request.contains("<end>")) break;
+        }
         return sb.toString();
     }
 

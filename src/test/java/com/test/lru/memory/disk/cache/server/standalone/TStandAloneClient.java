@@ -1,6 +1,7 @@
 package com.test.lru.memory.disk.cache.server.standalone;
 
 import com.lru.memory.disk.cache.DistributedRequestResponse;
+import com.lru.memory.disk.cache.ServerRequestProcessor;
 import com.lru.memory.disk.cache.Utl;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -22,13 +23,22 @@ import java.net.SocketException;
 public class TStandAloneClient {
     public static void main(String[] args){
         try{
-            tClient1();
+            runTClient1();
         }catch(Exception e){
             p("error: " + e);
         }
     }
     
-    static void tClient1() throws SocketException, IOException {
+    static void runTClient1() {
+        String request = "line one\n\rline two\n\rline three";
+        try{
+            tClient1(request);
+        }catch(Exception e){
+            p("error: " + e);
+        }
+    }
+    
+    static void tClient1(String request) throws SocketException, IOException {
         InputStream is = null; 
         InputStreamReader isr = null;
         BufferedReader br = null;
@@ -47,17 +57,30 @@ public class TStandAloneClient {
             
             os = clientSock.getOutputStream();
             pw = new PrintWriter(os, true);
-            pw.println("line 1\n \nline 2\n \nline3<end>");
+            pw.println(request + "<end>");
             pw.flush();
             
             is = clientSock.getInputStream();
             isr = new InputStreamReader(is);
             br = new BufferedReader(isr);
-            String response = br.readLine();
+            
+            String response = readInput(br);
             p("response: " + response);
+            
         } finally {
             Utl.closeAll(closeables);
         }
+    }
+    
+    static String readInput(BufferedReader br) throws IOException {
+        String request = null;
+        StringBuilder sb = new StringBuilder();
+        while(true) {
+            request = br.readLine();
+            sb.append(request).append("\n");
+            if(request.contains("<end>")) break;
+        }
+        return sb.toString();
     }
     
     static void p(Object o){
