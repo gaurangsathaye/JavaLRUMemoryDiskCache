@@ -47,7 +47,7 @@ public class TStandAloneClient {
             
             os = clientSock.getOutputStream();
             pw = new PrintWriter(os, true);
-            pw.println("line 1\nline 2");
+            pw.println("line 1\n \nline 2\n \nline3<end>");
             pw.flush();
             
             is = clientSock.getInputStream();

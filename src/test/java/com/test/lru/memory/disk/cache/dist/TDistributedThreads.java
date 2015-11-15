@@ -28,21 +28,22 @@ public class TDistributedThreads {
     }
     
     static int cacheSize = 200;
-    static int loopCount = 500;
-    static int randomRange = 220;
+    static int loopCount = 5;//500;
+    static int randomRange = 2;//220;
     static int threadPoolSize = 200;
+    static boolean diskCache = false;
     void distribute() throws Exception {
         p("start distribute");
-        Cache cache1 = new Cache("teaCache", cacheSize, true, "./datadir/server1/teacache", new Dao("server1"));
-        Cache cache2 = new Cache("teaCache", cacheSize, true, "./datadir/server2/teacache", new Dao("server2"));
-        Cache cache3 = new Cache("coffeeCache", cacheSize, true, "./datadir/server1/coffeecache", new Dao("server1"));
-        Cache cache4 = new Cache("coffeeCache", cacheSize, true, "./datadir/server2/coffeecache", new Dao("server2"));
+        Cache cache1 = new Cache("teaCache", cacheSize, diskCache, "./datadir/server1/teacache", new Dao("server1"));
+        Cache cache2 = new Cache("teaCache", cacheSize, diskCache, "./datadir/server2/teacache", new Dao("server2"));
+        Cache cache3 = new Cache("coffeeCache", cacheSize, diskCache, "./datadir/server1/coffeecache", new Dao("server1"));
+        Cache cache4 = new Cache("coffeeCache", cacheSize, diskCache, "./datadir/server2/coffeecache", new Dao("server2"));
 
         List<Cache> cacheList = new ArrayList<>();
         cacheList.add(cache1);
         cacheList.add(cache2);
-        cacheList.add(cache3);
-        cacheList.add(cache4);
+        //cacheList.add(cache3);
+        //cacheList.add(cache4);
 
         String clusterConfig = "127.0.0.1:19000, 127.0.0.1:19001";
 
@@ -152,7 +153,8 @@ public class TDistributedThreads {
 
         public String getData(String key, String cacheName) throws Exception {
             //if(server.equals("server2")) throw new Exception("test loadData Exception");
-            return "data for key: " + key + ", cacheName: " + cacheName + ", server: " + server + ", uuid: " + UUID.randomUUID().toString();
+            return "data for key: " + key + ", cacheName: " + cacheName + ", \n\r server: " + server + ", uuid: " + UUID.randomUUID().toString() +
+                    "\n\r third line \n\r fourth line";
         }
     }
 
