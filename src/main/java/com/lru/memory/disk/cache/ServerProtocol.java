@@ -43,11 +43,11 @@ public class ServerProtocol {
             jsongen = jfactory.createGenerator(baos);
             jsongen.writeStartObject();
             jsongen.writeNumberField(KeyTtlMillis, ttlMillis);
-            jsongen.writeStringField(KeyKey, key);
+            jsongen.writeStringField(KeyKey, new String(key.getBytes("UTF-8")));
             if(null == value){
                 jsongen.writeNullField(KeyValue);
             }else{
-                jsongen.writeStringField(KeyValue, value);
+                jsongen.writeStringField(KeyValue, new String(value.getBytes("UTF-8")));
             }
             jsongen.writeEndObject();
             jsongen.close();
@@ -68,7 +68,7 @@ public class ServerProtocol {
      * @throws UnsupportedEncodingException
      * @throws IOException 
      */
-    public static String createGetRequest(String key) throws BadRequestException, UnsupportedEncodingException, IOException {
+    public static String createGetRequestJson(String key) throws BadRequestException, UnsupportedEncodingException, IOException {
         if(Utl.areBlank(key)) throw new BadRequestException("Key is blank.", null);
         
         ByteArrayOutputStream baos = null;
@@ -78,7 +78,7 @@ public class ServerProtocol {
             JsonFactory jfactory = Utl.jsonFactory;
             jsongen = jfactory.createGenerator(baos);
             jsongen.writeStartObject();
-            jsongen.writeStringField(KeyKey, key);           
+            jsongen.writeStringField(KeyKey, new String(key.getBytes("UTF-8")));           
             jsongen.writeEndObject();
             jsongen.close();
             jsongen = null;
@@ -90,33 +90,57 @@ public class ServerProtocol {
         }
     }
     
-    public static Map<String, Object> parseGetPutRequest(String json) throws BadRequestException, IOException{
+    /**
+     * 
+     * @param value
+     * @return
+     * @throws BadRequestException
+     * @throws UnsupportedEncodingException
+     * @throws IOException 
+     */
+    public static String createResponseJson(String value) throws BadRequestException, UnsupportedEncodingException, IOException {      
+        ByteArrayOutputStream baos = null;
+        JsonGenerator jsongen = null;
+        try {
+            baos = new ByteArrayOutputStream();
+            JsonFactory jfactory = Utl.jsonFactory;
+            jsongen = jfactory.createGenerator(baos);
+            jsongen.writeStartObject();
+            if(null == value){
+                jsongen.writeNullField(KeyValue);
+            }else{
+                jsongen.writeStringField(KeyValue, new String(value.getBytes("UTF-8")));
+            }
+            jsongen.writeEndObject();
+            jsongen.close();
+            jsongen = null;
+            
+            return new String(baos.toByteArray(), "UTF-8");           
+        } finally {
+            try{if(null != baos) baos.close();}catch(Exception e){}
+            try{if(null != jsongen) jsongen.close();}catch(Exception e){}
+        }
+    }
+    
+    public static Map<String, Object> parseRequestResponse(String json) throws BadRequestException, IOException{
         if(Utl.areBlank(json)) throw new BadRequestException("Get/Put  is blank.", null);
-        
-        p("start parseGetPutReqeust");
-        
+       
         JsonFactory jfactory = Utl.jsonFactory;
-        JsonParser parser = jfactory.createParser(json.getBytes());
-        
-        p("created jsonparser");
+        JsonParser parser = jfactory.createParser(json.getBytes("UTF-8"));
         
         Map<String, Object> map = new HashMap<>();
         while(parser.nextToken() != JsonToken.END_OBJECT){
             String field = parser.getCurrentName();
             if(null == field) continue;
-            p("field: " + field);
             parser.nextToken();
             if(field.equals(KeyKey)){
                 String key = parser.getText();
-                p(key);
                 map.put(KeyKey, key);
             }else if(field.equals(KeyTtlMillis)){
                 long ttl = parser.getLongValue();
-                p(ttl);
                 map.put(KeyTtlMillis, ttl);
             }else if(field.equals(KeyValue)){
                 String value = parser.getText();
-                p(value);
                 map.put(KeyValue, value);
             }else{
                 throw new BadRequestException("Invalid Get/Put request json", null);

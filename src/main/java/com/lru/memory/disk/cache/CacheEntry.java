@@ -18,6 +18,11 @@ public class CacheEntry<T extends Serializable> implements Serializable {
     private long ttl;
     private long ttlTimeout;
     
+    /**
+     * 
+     * @param t
+     * @param timestamp 
+     */
     public CacheEntry(T t, long timestamp){
         this.t=t;
         this.timestamp=timestamp;

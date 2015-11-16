@@ -22,23 +22,51 @@ public class TStandAloneClient {
     public static void main(String[] args){
         try{
             runTClient1();
+            
+            //tRequests();
         }catch(Exception e){
             p("error: " + e);
         }
     }
     
-    static void runTClient1() throws BadRequestException, IOException {
+    static void tRequests() throws Exception {
         String data = 
-                //"line<end> </end> one\n\rline two\n\rline three";
-                null;
-        String putRequestJson = ServerProtocol.createPutRequestJson("key1", data, 1);
-        p("putRequestJson: " + putRequestJson);
+                "lineone\n\rline two\n\rline three";
+                //null;
+        String putRequestJson = ServerProtocol.createPutRequestJson("key1", data, Long.MAX_VALUE);
+        p("putRequestJson: " + putRequestJson);        
+        Map<String, Object> map = ServerProtocol.parseRequestResponse(putRequestJson);
+        p("put request map: " + map + "\n");
         
-        Map<String, Object> reqMap = ServerProtocol.parseGetPutRequest(putRequestJson);
-        p("reqMap: " + reqMap);
+        String getRequestJson = ServerProtocol.createGetRequestJson("key1");
+        p("getRequestJson: " + getRequestJson);
+        map = ServerProtocol.parseRequestResponse(getRequestJson);        
+        p("get request map: " + map + "\n");
+        
+        String responseJson = ServerProtocol.createResponseJson(data);
+        p("responseJson: " + responseJson);
+        map = ServerProtocol.parseRequestResponse(responseJson);
+        p("response json map: " + map + "\n");
+        
+        String badRequestJson = "{\"a\":\"b\", \"k\":\"k1\"}";
+        p("bad request json: " + badRequestJson);
+        map = ServerProtocol.parseRequestResponse(badRequestJson);
+    }
+    
+    static void runTClient1() throws BadRequestException, IOException {  
+        String badRequestJson = "{\"a\":\"b\", \"k\":\"k1\"}";
         
         try{
-            //tClient1(putRequestJson);
+            tClient1(ServerProtocol.createPutRequestJson("key1", null, 2000));
+            
+            tClient1(ServerProtocol.createGetRequestJson("key1"));
+            
+            try{Thread.sleep(2500);}catch(Exception e){}
+            
+            tClient1(ServerProtocol.createGetRequestJson("key1"));
+            
+            tClient1(badRequestJson);
+            
         }catch(Exception e){
             p("error: " + e);
         }

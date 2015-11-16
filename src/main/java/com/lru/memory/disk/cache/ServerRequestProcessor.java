@@ -6,8 +6,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,24 +44,57 @@ public class ServerRequestProcessor implements Runnable {
         BufferedReader br = null;
 
         OutputStream os = null;
+        OutputStreamWriter osw = null;
         PrintWriter pw = null;
 
-        AutoCloseable closeables[] = {is, isr, br, os, pw, socket};
+        AutoCloseable closeables[] = {is, isr, br, os, osw, pw, socket};
 
         try {
             is = socket.getInputStream();
-            isr = new InputStreamReader(is);
+            isr = new InputStreamReader(is, "UTF-8");
             br = new BufferedReader(isr);
 
             String request = br.readLine();
+            Map<String, Object> reqMap = ServerProtocol.parseRequestResponse(request);
+            boolean put = false;
+            if(reqMap.containsKey(ServerProtocol.KeyKey) && reqMap.containsKey(ServerProtocol.KeyTtlMillis) && reqMap.containsKey(ServerProtocol.KeyValue)){
+                put = true;
+            }else if(reqMap.containsKey(ServerProtocol.KeyKey)){
+                put = false;
+            }else{
+                throw new BadRequestException("Invalid request: " + request, null);
+            }
+            
+            String response = null;
+            if(put){
+                String value = null;
+                Object valueObj= reqMap.get(ServerProtocol.KeyValue);
+                if(null != valueObj) value = (String) valueObj;
+                
+                long ttl = (long) reqMap.get(ServerProtocol.KeyTtlMillis);
+                String key = (String) reqMap.get(ServerProtocol.KeyKey);
+                CacheEntry<String> ce = new CacheEntry<>(value, System.currentTimeMillis());
+                ce.setTtl(ttl);
+                this.cache.putOnly(key, ce);
+                response = ServerProtocol.createResponseJson("put success");
+            }else{
+                String key = (String) reqMap.get(ServerProtocol.KeyKey);
+                CacheEntry<String> ce = this.cache.getOnly(key);
+                String value = null;
+                if( (null != ce) && (! ce.isTtlExpired()) ){
+                    value = ce.getCached();
+                }
+                response = ServerProtocol.createResponseJson(value);
+            }
 
             os = socket.getOutputStream();
-            pw = new PrintWriter(os, true);
-
-            String response = "From server, request: " + request;
+            osw = new OutputStreamWriter(os, "UTF-8");
+            pw = new PrintWriter(osw, true);
 
             pw.println(response);
+            
             os.flush();
+            osw.flush();
             pw.flush();
         } catch (Exception e) {
             log.error("Unable to process request", e);
