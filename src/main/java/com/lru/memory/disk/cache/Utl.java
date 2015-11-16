@@ -40,7 +40,7 @@ public class Utl {
         }
     }
 
-    static boolean areBlank(String... strs) {
+    public static boolean areBlank(String... strs) {
         try {
             if ((null == strs) || (strs.length < 1)) {
                 return true;

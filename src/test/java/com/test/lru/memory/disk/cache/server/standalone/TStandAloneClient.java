@@ -1,17 +1,13 @@
 package com.test.lru.memory.disk.cache.server.standalone;
 
-import com.lru.memory.disk.cache.DistributedRequestResponse;
-import com.lru.memory.disk.cache.ServerRequestProcessor;
 import com.lru.memory.disk.cache.Utl;
+import com.lru.memory.disk.cache.exceptions.BadRequestException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
@@ -30,7 +26,7 @@ public class TStandAloneClient {
     }
     
     static void runTClient1() {
-        String request = "line one\n\rline two\n\rline three";
+        String request = "line<end> </end> one\n\rline two\n\rline three";
         try{
             tClient1(request);
         }catch(Exception e){
@@ -38,7 +34,10 @@ public class TStandAloneClient {
         }
     }
     
-    static void tClient1(String request) throws SocketException, IOException {
+    static void tClient1(String request) throws SocketException, IOException, BadRequestException {
+        if(Utl.areBlank(request)) throw new BadRequestException("request is blank", null);
+        request = request.replace("end>", "/end>");
+        
         InputStream is = null; 
         InputStreamReader isr = null;
         BufferedReader br = null;
@@ -81,6 +80,10 @@ public class TStandAloneClient {
             if(request.contains("<end>")) break;
         }
         return sb.toString();
+    }
+    
+    static void tReqClean() throws Exception{
+        
     }
     
     static void p(Object o){
