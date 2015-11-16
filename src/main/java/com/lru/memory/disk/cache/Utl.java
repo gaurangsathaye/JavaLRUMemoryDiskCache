@@ -1,5 +1,6 @@
 package com.lru.memory.disk.cache;
 
+import com.fasterxml.jackson.core.JsonFactory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -20,6 +21,8 @@ import org.slf4j.LoggerFactory;
 public class Utl {
     
     private static final Logger log = LoggerFactory.getLogger(Utl.class);
+    
+    static JsonFactory jsonFactory = new JsonFactory();
 
     private static ExecutorService globalExecutorService = null;
     private static CacheLockManager globalCacheLockManager = null;

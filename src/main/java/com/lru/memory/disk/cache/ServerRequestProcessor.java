@@ -1,5 +1,6 @@
 package com.lru.memory.disk.cache;
 
+import com.lru.memory.disk.cache.exceptions.BadRequestException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,7 +51,7 @@ public class ServerRequestProcessor implements Runnable {
             isr = new InputStreamReader(is);
             br = new BufferedReader(isr);
 
-            String request = readInput(br);
+            String request = br.readLine();
 
             os = socket.getOutputStream();
             pw = new PrintWriter(os, true);
@@ -66,16 +67,8 @@ public class ServerRequestProcessor implements Runnable {
             Utl.closeAll(closeables);
         }
     }
-
-    static String readInput(BufferedReader br) throws IOException {
-        String request = null;
-        StringBuilder sb = new StringBuilder();
-        while(true) {
-            request = br.readLine();
-            sb.append(request).append("\n");
-            if(request.contains("<end>")) break;
-        }
-        return sb.toString();
-    }
-
+    
+    /*private String processRequest(String req) throws BadRequestException{
+        if(Utl.areBlank(req)) throw new BadRequestException("request is blank", null);
+    }*/
 }

@@ -1,5 +1,6 @@
 package com.test.lru.memory.disk.cache.server.standalone;
 
+import com.lru.memory.disk.cache.ServerProtocol;
 import com.lru.memory.disk.cache.Utl;
 import com.lru.memory.disk.cache.exceptions.BadRequestException;
 import java.io.BufferedReader;
@@ -11,6 +12,7 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Map;
 
 /**
  *
@@ -25,10 +27,18 @@ public class TStandAloneClient {
         }
     }
     
-    static void runTClient1() {
-        String request = "line<end> </end> one\n\rline two\n\rline three";
+    static void runTClient1() throws BadRequestException, IOException {
+        String data = 
+                //"line<end> </end> one\n\rline two\n\rline three";
+                null;
+        String putRequestJson = ServerProtocol.createPutRequestJson("key1", data, 1);
+        p("putRequestJson: " + putRequestJson);
+        
+        Map<String, Object> reqMap = ServerProtocol.parseGetPutRequest(putRequestJson);
+        p("reqMap: " + reqMap);
+        
         try{
-            tClient1(request);
+            //tClient1(putRequestJson);
         }catch(Exception e){
             p("error: " + e);
         }
@@ -36,7 +46,6 @@ public class TStandAloneClient {
     
     static void tClient1(String request) throws SocketException, IOException, BadRequestException {
         if(Utl.areBlank(request)) throw new BadRequestException("request is blank", null);
-        request = request.replace("end>", "/end>");
         
         InputStream is = null; 
         InputStreamReader isr = null;
@@ -56,35 +65,20 @@ public class TStandAloneClient {
             
             os = clientSock.getOutputStream();
             pw = new PrintWriter(os, true);
-            pw.println(request + "<end>");
+            pw.println(request);
             pw.flush();
             
             is = clientSock.getInputStream();
             isr = new InputStreamReader(is);
             br = new BufferedReader(isr);
             
-            String response = readInput(br);
+            String response = br.readLine();
             p("response: " + response);
             
         } finally {
             Utl.closeAll(closeables);
         }
-    }
-    
-    static String readInput(BufferedReader br) throws IOException {
-        String request = null;
-        StringBuilder sb = new StringBuilder();
-        while(true) {
-            request = br.readLine();
-            sb.append(request).append("\n");
-            if(request.contains("<end>")) break;
-        }
-        return sb.toString();
-    }
-    
-    static void tReqClean() throws Exception{
-        
-    }
+    }  
     
     static void p(Object o){
         System.out.println(o);

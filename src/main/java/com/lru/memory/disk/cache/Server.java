@@ -25,6 +25,9 @@ public class Server {
     private static DistributedManager distMgr;
 
     public static void main(String[] args) throws Exception {
+        
+        getSetupInfo();
+        
         distConfig = new DistributedConfig(serverThreads,
                 DistributedConfig.getDefaultClientConnectTimeoutMillis(),
                 DistributedConfig.getDefaultClientReadTimeoutMillis(),
