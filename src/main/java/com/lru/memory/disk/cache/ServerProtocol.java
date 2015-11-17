@@ -140,7 +140,9 @@ public class ServerProtocol {
                 long ttl = parser.getLongValue();
                 map.put(KeyTtlMillis, ttl);
             }else if(field.equals(KeyValue)){
-                String value = parser.getText();
+                String value = 
+                        //parser.getText();
+                        parser.getValueAsString();
                 map.put(KeyValue, value);
             }else{
                 throw new BadRequestException("Invalid Get/Put request json", null);
@@ -150,7 +152,4 @@ public class ServerProtocol {
         return map;
     }
     
-    static void p(Object o){
-        System.out.println(o);
-    }
 }

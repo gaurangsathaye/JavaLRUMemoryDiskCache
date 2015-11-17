@@ -2,7 +2,6 @@ package com.lru.memory.disk.cache;
 
 import com.lru.memory.disk.cache.exceptions.BadRequestException;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -70,7 +69,6 @@ public class ServerRequestProcessor implements Runnable {
                 String value = null;
                 Object valueObj= reqMap.get(ServerProtocol.KeyValue);
                 if(null != valueObj) value = (String) valueObj;
-                
                 long ttl = (long) reqMap.get(ServerProtocol.KeyTtlMillis);
                 String key = (String) reqMap.get(ServerProtocol.KeyKey);
                 CacheEntry<String> ce = new CacheEntry<>(value, System.currentTimeMillis());

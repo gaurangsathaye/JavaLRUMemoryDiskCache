@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -61,11 +62,11 @@ public class TStandAloneClient {
             
             tClient1(ServerProtocol.createGetRequestJson("key1"));
             
-            try{Thread.sleep(2500);}catch(Exception e){}
+            //try{Thread.sleep(2500);}catch(Exception e){}
             
-            tClient1(ServerProtocol.createGetRequestJson("key1"));
+            //tClient1(ServerProtocol.createGetRequestJson("key1"));
             
-            tClient1(badRequestJson);
+            //tClient1(badRequestJson);
             
         }catch(Exception e){
             p("error: " + e);
@@ -80,11 +81,12 @@ public class TStandAloneClient {
         BufferedReader br = null;
         
         OutputStream os = null;
+        OutputStreamWriter osw = null;
         PrintWriter pw = null;
 
         Socket clientSock = null;
 
-        AutoCloseable closeables[] = {is, os, clientSock};
+        AutoCloseable closeables[] = {is, isr, br, os, osw, pw, clientSock};
         try {            
             //clientSock = new Socket(clusterServerForCacheKey.getHost(), clusterServerForCacheKey.getPort());
             clientSock = new Socket();
@@ -92,17 +94,19 @@ public class TStandAloneClient {
             clientSock.setSoTimeout(10000);
             
             os = clientSock.getOutputStream();
-            pw = new PrintWriter(os, true);
+            osw = new OutputStreamWriter(os, "UTF-8");
+            pw = new PrintWriter(osw, true);
             pw.println(request);
+            os.flush();
+            osw.flush();
             pw.flush();
             
             is = clientSock.getInputStream();
-            isr = new InputStreamReader(is);
+            isr = new InputStreamReader(is, "UTF-8");
             br = new BufferedReader(isr);
             
             String response = br.readLine();
-            p("response: " + response);
-            
+            p("response: " + response);            
         } finally {
             Utl.closeAll(closeables);
         }

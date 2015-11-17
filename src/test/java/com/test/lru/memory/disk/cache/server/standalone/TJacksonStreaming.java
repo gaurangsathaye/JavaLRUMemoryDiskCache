@@ -16,9 +16,22 @@ public class TJacksonStreaming {
 
     public static void main(String[] args) {
         try {
-            createJson();
+            //createJson();
+            parse();
         } catch (Exception e) {
             p("error: " + e);
+        }
+    }
+    
+    static void parse() throws Exception {
+        String json = "{\"v\":null}";
+        
+        Map<String, Object> map = ServerProtocol.parseRequestResponse(json);
+        p(map);
+        if(null == map.get("v")){
+            p("v is null");
+        }else{
+            p("v is not null");
         }
     }
 
