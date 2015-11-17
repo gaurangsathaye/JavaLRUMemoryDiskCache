@@ -11,7 +11,7 @@ public class Server {
 
     private static final Logger log = LoggerFactory.getLogger(Server.class);
 
-    private static final String Usage = "java -Dport=23290 -Dcache.size=50000 -Ddisk.cache.dir=\"./standalone/cache\" -Dserver.threads=200 com.lru.memory.disk.cache.CacheServer";
+    private static final String Usage = "java -Dport=23290 -Dcache.size=50000 -Ddisk.cache.dir=\"./standalone/cache\" -Dserver.threads=200 com.lru.memory.disk.cache.Server";
 
     public static final String CacheName = "stand_alone_cache";
 
@@ -34,8 +34,10 @@ public class Server {
                 DistributedConfig.isDefaultCacheDistributedResponse());
 
         if (null == diskCacheDir) {
+            log.info("Created memory only cache.");
             cache = new ServerCache(CacheName, cacheSize);
         } else {
+            log.info("Created memory and disk cache.");
             cache = new ServerCache(CacheName, cacheSize, true, diskCacheDir);
         }
         
@@ -71,7 +73,7 @@ public class Server {
             return;
         }
 
-        String diskCacheDir = System.getProperty("disk.cache.dir");
+        diskCacheDir = System.getProperty("disk.cache.dir");
         if (diskCacheDir != null) {
             diskCacheDir = diskCacheDir.trim();
             if (Utl.areBlank(diskCacheDir)) {

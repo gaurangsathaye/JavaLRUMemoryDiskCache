@@ -23,8 +23,8 @@ public abstract class AbstractCacheService<T> implements DiskOps {
     
     private static final Logger log = LoggerFactory.getLogger(AbstractCacheService.class);
 
-    private static final String KeyInternalGetFromDisk = "f";
-    private static final String KeyInternalGetCachedObj = "o";
+    static final String KeyInternalGetFromDisk = "f";
+    static final String KeyInternalGetCachedObj = "o";
     private static final int NumberDiskShards = 1000;
     private static final int ConcurrencyLevel = 200;
 
@@ -225,7 +225,7 @@ public abstract class AbstractCacheService<T> implements DiskOps {
 
         return ((T) internalGetOnly(key, true).get(KeyInternalGetCachedObj));
     }
-
+    
     public final Map<String, Object> getStats() {
         long hits = statsHits.get();
         long misses = statsMisses.get();
@@ -326,7 +326,7 @@ public abstract class AbstractCacheService<T> implements DiskOps {
         }
     }
 
-    private void internalPutOnly(String key, T o, boolean overridePersist) throws Exception {
+    void internalPutOnly(String key, T o, boolean overridePersist) throws Exception {
         if (null == o) {
             throw new Exception("Key: " + key + " - Null values not allowed");
         }
@@ -340,7 +340,7 @@ public abstract class AbstractCacheService<T> implements DiskOps {
         }
     }
 
-    private Map<String, Object> internalGetOnly(String key, boolean doStats) throws Exception {
+    Map<String, Object> internalGetOnly(String key, boolean doStats) throws Exception {
         lock.readLock().lock();
         try {
             Map<String, Object> map = internalGet(key);

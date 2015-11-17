@@ -64,22 +64,29 @@ public class ServerRequestProcessor implements Runnable {
                 throw new BadRequestException("Invalid request: " + request, null);
             }
             
+            String key = (String) reqMap.get(ServerProtocol.KeyKey);
+            if(Utl.areBlank(key)) throw new BadRequestException("key is blank", null);
+            
             String response = null;
             if(put){
                 String value = null;
                 Object valueObj= reqMap.get(ServerProtocol.KeyValue);
                 if(null != valueObj) value = (String) valueObj;
                 long ttl = (long) reqMap.get(ServerProtocol.KeyTtlMillis);
-                String key = (String) reqMap.get(ServerProtocol.KeyKey);
                 CacheEntry<String> ce = new CacheEntry<>(value, System.currentTimeMillis());
                 ce.setTtl(ttl);
                 this.cache.putOnly(key, ce);
                 response = ServerProtocol.createResponseJson("put success");
             }else{
-                String key = (String) reqMap.get(ServerProtocol.KeyKey);
-                CacheEntry<String> ce = this.cache.getOnly(key);
+                Map<String, Object> map = this.cache.internalGetOnly(key, true);
+                boolean fromDisk = (Boolean) map.get(AbstractCacheService.KeyInternalGetFromDisk);
+                CacheEntry<String> ce = (CacheEntry<String>) (map.get(AbstractCacheService.KeyInternalGetCachedObj));
                 String value = null;
                 if( (null != ce) && (! ce.isTtlExpired()) ){
+                    //Lazy load disk objects into memory
+                    if (fromDisk) {
+                        this.cache.internalPutOnly(key, ce, false); //false because we don't want to re-serialize a deserialized object, this is to lazy load to memory
+                    }
                     value = ce.getCached();
                 }
                 response = ServerProtocol.createResponseJson(value);

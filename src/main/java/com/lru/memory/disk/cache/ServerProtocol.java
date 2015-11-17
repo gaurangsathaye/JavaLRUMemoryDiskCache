@@ -141,8 +141,8 @@ public class ServerProtocol {
                 map.put(KeyTtlMillis, ttl);
             }else if(field.equals(KeyValue)){
                 String value = 
-                        //parser.getText();
-                        parser.getValueAsString();
+                        //parser.getText(); //converts null string to "null"
+                        parser.getValueAsString(); //keeps null string as null
                 map.put(KeyValue, value);
             }else{
                 throw new BadRequestException("Invalid Get/Put request json", null);
