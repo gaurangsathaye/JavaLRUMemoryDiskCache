@@ -88,6 +88,8 @@ public class ServerRequestProcessor implements Runnable {
                         this.cache.internalPutOnly(key, ce, false); //false because we don't want to re-serialize a deserialized object, this is to lazy load to memory
                     }
                     value = ce.getCached();
+                }else if( (null != ce) && (ce.isTtlExpired()) && fromDisk){
+                    this.cache.asyncDelete(key); //delete disk items that are expired
                 }
                 response = ServerProtocol.createResponseJson(value);
             }

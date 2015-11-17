@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -275,6 +276,24 @@ public abstract class AbstractCacheService<T> implements DiskOps {
     public boolean isDiskPersistent() {
         return this.persist;
     }
+
+    @Override
+    public void asyncSerialize(String key, Serializable ser) {
+        try {
+            Utl.offerToGlobalExecutorService(new AsyncFileSerialize(this.getPathToFile(key), ser));
+        } catch (Exception e) {
+            log.error("Unable to asyncSerialize: key: " + key, e);
+        }
+    }
+    
+    @Override
+    public void asyncDelete(String key){
+        try {
+            Utl.offerToGlobalExecutorService(new AsyncFileDelete(this.getPathToFile(key)));
+        } catch (Exception e) {
+            log.error("Unable to asyncDelete: key: " + key, e);
+        }
+    }    
     //End DiskOps impl
 
     private T internalPutWithLookup(String key) throws Exception {
@@ -389,8 +408,7 @@ public abstract class AbstractCacheService<T> implements DiskOps {
         try {
             cache.put(key, t);
             if (persist && overridePersist) {
-                //serialize(key, t);
-                Utl.offerToGlobalExecutorService(new AsyncFileSerialize(this.getPathToFile(key), (Serializable) t));
+                this.asyncSerialize(key, (Serializable) t);
             }
         } catch (Exception e) {
             throw e;

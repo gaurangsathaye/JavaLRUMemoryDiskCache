@@ -34,7 +34,7 @@ class LRUCache<K extends String, V> extends LinkedHashMap<K, V> {
     
     private void deleteFromFilesystem(Entry<K, V> eldest){
         try{            
-            Utl.offerToGlobalExecutorService(new AsyncFileDelete(this.diskOps.getPathToFile(eldest.getKey())));
+            this.diskOps.asyncDelete(eldest.getKey());
         }catch(Exception e){}
     }
 }

@@ -58,7 +58,7 @@ public class TStandAloneClient {
         String badRequestJson = "{\"a\":\"b\", \"k\":\"k1\"}";
         
         try{
-            //tClient1(ServerProtocol.createPutRequestJson("key1", "value1", 15000));
+            //tClient1(ServerProtocol.createPutRequestJson("key1", "value1", 2000));
             
             tClient1(ServerProtocol.createGetRequestJson("key1"));
             
