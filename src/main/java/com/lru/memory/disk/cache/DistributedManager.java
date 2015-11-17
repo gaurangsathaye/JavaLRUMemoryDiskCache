@@ -40,7 +40,13 @@ class DistributedManager {
         return new DistributedManager(serverPort, config, standAloneServerCache);
     }
 
-    //For in-app distributed caching
+    /**
+     * 
+     * 
+     * FOR IN-APP DISTRIBUTED CACHING
+     *
+     * 
+     **/
     private DistributedManager(int serverPort, String clusterConfig, DistributedConfig config, AbstractCacheService<? extends Serializable>[] caches) throws Exception {
         
         if(Utl.areBlank(clusterConfig)) throw new Exception("Cluster config is blank.");
@@ -62,11 +68,17 @@ class DistributedManager {
         this.distributedClient = new DistributedClient(this);
         
         //These need to happen last because createCacheMap depends on this.distributedClient
-        createClusterServers(clusterConfig);
+        createClusterServers(clusterConfig, true);
         createCacheMap(caches);       
     }
     
-    //For stand alone cache server
+    /**
+     * 
+     * 
+     * FOR STAND ALONE CACHE SERVER
+     *
+     * 
+     **/
     private DistributedManager(int serverPort, DistributedConfig config, ServerCache standAloneServerCache) throws Exception{
         if(serverPort < 1) throw new Exception("Invalid port number: " + serverPort + ", serverPort must be between 1 and 65535 inclusive.");
         
@@ -146,7 +158,7 @@ class DistributedManager {
         new Thread(this.server).start();
     }
     
-    private void createClusterServers(String cluster) throws Exception {
+    private void createClusterServers(String cluster, boolean inApp) throws Exception {
         String[] hostPorts = cluster.split(",");
         for(String hostPort:hostPorts){
             if(Utl.areBlank(hostPort)) throw new Exception("Cluster member blank, invalid cluster config");
@@ -155,16 +167,20 @@ class DistributedManager {
             clusterServers.add(new DistributedConfigServer(hostAndPort[0], hostAndPort[1]));
         }
         
-        boolean match = false;
-        for(DistributedConfigServer cs : clusterServers){
-            if(cs.getPort() == this.serverPort){
-                match = true;
-                break;
+        if(inApp){
+            //Check that this distributed in app server port matches at least one port in the distributed config
+            //If it doesn't, then cluster config is incorrect
+            boolean match = false;
+            for(DistributedConfigServer cs : clusterServers){
+                if(cs.getPort() == this.serverPort){
+                    match = true;
+                    break;
+                }
             }
+            if(! match){
+                throw new Exception("No items in Cluster config: " + this.clusterConfig + ", contain server port: " + this.serverPort);
+            }   
         }
-        if(! match){
-            throw new Exception("No items in Cluster config: " + this.clusterConfig + ", contain server port: " + this.serverPort);
-        }       
         
         this.numberOfClusterServers = clusterServers.size();
         if(this.numberOfClusterServers < 1) throw new Exception("Number of created clusters servers from cluster config: " + this.clusterConfig + ", is invalid: " + this.numberOfClusterServers);
