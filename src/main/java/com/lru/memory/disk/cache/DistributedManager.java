@@ -32,12 +32,19 @@ class DistributedManager {
     
     private ServerCache standAloneServerCache;
     
+    /*
+        Sample cluster config: "127.0.0.1:19000, 127.0.0.1:19001"
+    */    
     static DistributedManager getDistributedManagerForInApp(int serverPort, String clusterConfig, DistributedConfig config, AbstractCacheService<? extends Serializable>[] caches) throws Exception {
         return new DistributedManager(serverPort, clusterConfig, config, caches);
     }
     
-    static DistributedManager getDistributedManagerForStandalone(int serverPort, DistributedConfig config, ServerCache standAloneServerCache) throws Exception{
+    static DistributedManager getDistributedManagerForStandaloneServer(int serverPort, DistributedConfig config, ServerCache standAloneServerCache) throws Exception{
         return new DistributedManager(serverPort, config, standAloneServerCache);
+    }
+    
+    static DistributedManager getDistributedManagerForStandaloneClient(String clusterConfig, DistributedConfig config) throws Exception{
+        return new DistributedManager(clusterConfig, config);
     }
 
     /**
@@ -94,6 +101,24 @@ class DistributedManager {
         
         this.server = new DistributedServer(this);
     }
+    
+    /**
+     * 
+     * 
+     * FOR STAND ALONE CACHE SERVER CLIENT
+     *
+     * 
+     **/
+    private DistributedManager(String clusterConfig, DistributedConfig config) throws Exception {
+        if(Utl.areBlank(clusterConfig)) throw new Exception("Cluster config is blank.");    
+        if(null == config) throw new Exception("Config is null, please pass in Config");
+        
+        this.clusterConfig = clusterConfig;        
+        this.config = config;
+               
+        createClusterServers(clusterConfig, false);
+    }
+
     
     Runnable getServerRequestProcessor(Socket socket, DistributedManager distributedManager){
         if(this.standAlone){

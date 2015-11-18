@@ -11,7 +11,7 @@ public class Server {
 
     private static final Logger log = LoggerFactory.getLogger(Server.class);
 
-    private static final String Usage = "java -Dport=23290 -Dcache.size=50000 -Ddisk.cache.dir=\"./standalone/cache\" -Dserver.threads=200 com.lru.memory.disk.cache.Server";
+    private static final String Usage = "java -jar JavaLRUMemoryDiskCache-1.2.jar -Dport=23290 -Dcache.size=50000 -Ddisk.cache.dir=\"./standalone/cache\" -Dserver.threads=200";
 
     public static final String CacheName = "stand_alone_cache";
 
@@ -41,7 +41,7 @@ public class Server {
             cache = new ServerCache(CacheName, cacheSize, true, diskCacheDir);
         }
         
-        distMgr = DistributedManager.getDistributedManagerForStandalone(port, distConfig, cache);
+        distMgr = DistributedManager.getDistributedManagerForStandaloneServer(port, distConfig, cache);
         distMgr.startServer();
     } //end main
 

@@ -1,5 +1,6 @@
 package com.test.lru.memory.disk.cache.server.standalone;
 
+import com.lru.memory.disk.cache.ServerCacheClient;
 import com.lru.memory.disk.cache.ServerProtocol;
 import com.lru.memory.disk.cache.Utl;
 import com.lru.memory.disk.cache.exceptions.BadRequestException;
@@ -22,12 +23,22 @@ import java.util.Map;
 public class TStandAloneClient {
     public static void main(String[] args){
         try{
-            runTClient1();
+            //runTClient1();
             
             //tRequests();
+            
+            tServerCacheClient();
         }catch(Exception e){
             p("error: " + e);
         }
+    }
+    
+    static void tServerCacheClient() throws Exception {
+        String clusterConfig = "127.0.0.1:19000, 127.0.0.1:19001";
+        ServerCacheClient client = new ServerCacheClient(clusterConfig, 5000, 10000);
+        
+        p("key1: " + client.get("key1"));
+        p("key2: " + client.get("key2"));
     }
     
     static void tRequests() throws Exception {

@@ -70,6 +70,7 @@ class DistributedServerRequestProcessor implements Runnable {
             distrr.setServerSetServerToHandleKey(this.distMgr.getClusterServerForCacheKey(cacheKey).getServerId());
             String clientServerIdForKey = DistributedConfigServer.getServerId(clientSetServerHost, clientSetServerPort);
             if( (! sendError) && (! distrr.getServerSetServerToHandleKey().equals(clientServerIdForKey) ) ){
+                //The server that client thinks should handle this key, and the server that the server thinks should handle the key are different.
                 distrr.setServerSetErrorLevel(DistributedServer.ServerErrorLevelSevere_ClientServerDontMatchForKey);
                 distrr.setServerSetErrorMessage("cache key: " + cacheKey + ", client serverId for key: " + clientServerIdForKey +
                         ", server serverId for key: " + distrr.getServerSetServerToHandleKey());                
