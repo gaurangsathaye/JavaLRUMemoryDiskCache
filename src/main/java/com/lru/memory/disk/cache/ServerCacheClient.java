@@ -11,12 +11,18 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author sathayeg
  */
 public class ServerCacheClient {
+    
+    private static final Logger log = LoggerFactory.getLogger(ServerCacheClient.class);
+    
+    private static final int RemoteAttempts = 2;
 
     private final String clusterConfig;
     private final int clientConnTimeoutMillis;
@@ -33,14 +39,34 @@ public class ServerCacheClient {
                 new DistributedConfig(1, clientConnTimeoutMillis, clientReadTimeoutMillis, false));
     }
     
-    public String get(String key) throws BadRequestException, IOException{
-        DistributedConfigServer remoteServer = this.getServerForKey(key);
-        return remoteCall(remoteServer.getHost(), remoteServer.getPort(), ServerProtocol.createGetRequestJson(key));
+    public String get(String key) throws BadRequestException, IOException, Exception{
+        Exception ex = null;
+        for(int i=0;i<RemoteAttempts;i++){
+            DistributedConfigServer remoteServer = this.getServerForKey(key);
+            try{
+                return remoteCall(remoteServer.getHost(), remoteServer.getPort(), ServerProtocol.createGetRequestJson(key));
+            }catch(BadRequestException | IOException e){
+                log.error("Unable to get data from: " + remoteServer.getServerId(), e);
+                remoteServer.setNetworkErrorNextAttemptTimestamp();
+                ex = e;
+            }
+        }
+        throw ex;
     }
     
-    public String put(String key, String value, long ttlMillis) throws BadRequestException, IOException {
-        DistributedConfigServer remoteServer = this.getServerForKey(key);
-        return remoteCall(remoteServer.getHost(), remoteServer.getPort(), ServerProtocol.createPutRequestJson(key, value, ttlMillis));
+    public String put(String key, String value, long ttlMillis) throws BadRequestException, IOException, Exception {       
+        Exception ex = null;
+        for(int i=0;i<RemoteAttempts;i++){
+            DistributedConfigServer remoteServer = this.getServerForKey(key);
+            try{
+                return remoteCall(remoteServer.getHost(), remoteServer.getPort(), ServerProtocol.createPutRequestJson(key, value, ttlMillis));
+            }catch(BadRequestException | IOException e){
+                log.error("Unable to put data to: " + remoteServer.getServerId(), e);
+                remoteServer.setNetworkErrorNextAttemptTimestamp();
+                ex = e;
+            }
+        }
+        throw ex;
     }
     
     private DistributedConfigServer getServerForKey(String key) throws BadRequestException{

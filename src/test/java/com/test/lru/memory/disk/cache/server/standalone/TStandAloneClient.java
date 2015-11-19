@@ -38,11 +38,15 @@ public class TStandAloneClient {
         String clusterConfig = "127.0.0.1:23290, 127.0.0.1:23291";
         ServerCacheClient client = new ServerCacheClient(clusterConfig, 5000, 10000);        
         
-        for(int i=0;i<10;i++){
-            p(client.put("key" + i, "value" + i, 1000));
+        for(int i=0;i<2;i++){
+            p(client.put("key" + i, "value" + i, 600000));
         }
         
-        for(int i=0;i<10;i++){
+        for(int i=0;i<2;i++){
+            p(client.get("key" + i));
+        }
+        
+        for(int i=0;i<2;i++){
             p(client.get("key" + i));
         }
     }
