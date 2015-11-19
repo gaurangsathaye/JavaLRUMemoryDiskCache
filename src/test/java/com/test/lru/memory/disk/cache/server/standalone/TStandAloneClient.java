@@ -16,6 +16,9 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  *
@@ -28,9 +31,41 @@ public class TStandAloneClient {
             
             //tRequests();
             
-            tServerCacheClient();
+            //tServerCacheClient();
+            
+            tServerCacheClientThreads();
         }catch(Exception e){
             p("error: " + e);
+        }
+    }
+    
+    static void tServerCacheClientThreads() throws Exception {
+        String clusterConfig = "127.0.0.1:23290, 127.0.0.1:23291";
+        ServerCacheClient client = new ServerCacheClient(clusterConfig, 5000, 10000);  
+        
+        ExecutorService execService = Executors.newFixedThreadPool(125);
+        while(true){
+            execService.execute(() -> {
+                Random rnd = new Random();
+                try{Thread.sleep((long) (rnd.nextInt(800)));}catch(Exception e){}
+                int i = rnd.nextInt(2);
+                int j = rnd.nextInt(100);
+                try{
+                    switch (i) {
+                        case 0:
+                            p(client.put("key" + j, "value" + j, 10000));
+                            break;
+                        case 1:
+                            p(client.get("key" + j));
+                            break;
+                        default:
+                            p("invalid i: " + i);
+                            System.exit(0);
+                    }
+                }catch(Exception e){
+                    p("error: " + e);
+                }
+            });
         }
     }
     
@@ -45,6 +80,12 @@ public class TStandAloneClient {
         for(int i=0;i<2;i++){
             p(client.get("key" + i));
         }
+        
+        for(int i=0;i<2;i++){
+            p(client.get("key" + i));
+        }
+        
+        try{Thread.sleep(25000);}catch(Exception e){}
         
         for(int i=0;i<2;i++){
             p(client.get("key" + i));
