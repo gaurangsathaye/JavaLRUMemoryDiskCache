@@ -33,8 +33,18 @@ public class ServerCacheClient {
                 new DistributedConfig(1, clientConnTimeoutMillis, clientReadTimeoutMillis, false));
     }
     
-    public String get(String key) throws BadRequestException{
-        return this.distMgr.getClusterServerForCacheKey(key).getServerId();
+    public String get(String key) throws BadRequestException, IOException{
+        DistributedConfigServer remoteServer = this.getServerForKey(key);
+        return remoteCall(remoteServer.getHost(), remoteServer.getPort(), ServerProtocol.createGetRequestJson(key));
+    }
+    
+    public String put(String key, String value, long ttlMillis) throws BadRequestException, IOException {
+        DistributedConfigServer remoteServer = this.getServerForKey(key);
+        return remoteCall(remoteServer.getHost(), remoteServer.getPort(), ServerProtocol.createPutRequestJson(key, value, ttlMillis));
+    }
+    
+    private DistributedConfigServer getServerForKey(String key) throws BadRequestException{
+        return this.distMgr.getClusterServerForCacheKeyRotate(key);
     }
     
     private String remoteCall(String host, int port, String request) throws SocketException, IOException, BadRequestException {

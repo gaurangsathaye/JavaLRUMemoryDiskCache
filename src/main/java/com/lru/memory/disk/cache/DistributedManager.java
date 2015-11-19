@@ -133,6 +133,22 @@ class DistributedManager {
         return clusterServers.get((Math.abs(key.hashCode()) % this.numberOfClusterServers));
     }
     
+    DistributedConfigServer getClusterServerForCacheKeyRotate(String key) throws BadRequestException{
+        if(Utl.areBlank(key)) throw new BadRequestException("key is blank", null);
+        
+        int idx = Math.abs(key.hashCode()) % this.numberOfClusterServers;        
+        DistributedConfigServer server = clusterServers.get(idx);
+        if(server.tryRemote()) return server;
+        
+        for(int i=0;i<2;i++){
+            ++idx;
+            DistributedConfigServer otherServer = clusterServers.get(idx % this.numberOfClusterServers);
+            if(otherServer.tryRemote()) return otherServer;
+        }
+        
+        return server;
+    }
+    
     DistributedConfig getConfig(){
         return this.config;
     }

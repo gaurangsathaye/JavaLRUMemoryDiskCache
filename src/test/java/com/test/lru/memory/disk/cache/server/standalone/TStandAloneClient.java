@@ -1,5 +1,6 @@
 package com.test.lru.memory.disk.cache.server.standalone;
 
+import com.lru.memory.disk.cache.DistributedConfigServer;
 import com.lru.memory.disk.cache.ServerCacheClient;
 import com.lru.memory.disk.cache.ServerProtocol;
 import com.lru.memory.disk.cache.Utl;
@@ -34,11 +35,16 @@ public class TStandAloneClient {
     }
     
     static void tServerCacheClient() throws Exception {
-        String clusterConfig = "127.0.0.1:19000, 127.0.0.1:19001";
-        ServerCacheClient client = new ServerCacheClient(clusterConfig, 5000, 10000);
+        String clusterConfig = "127.0.0.1:23290, 127.0.0.1:23291";
+        ServerCacheClient client = new ServerCacheClient(clusterConfig, 5000, 10000);        
         
-        p("key1: " + client.get("key1"));
-        p("key2: " + client.get("key2"));
+        for(int i=0;i<10;i++){
+            p(client.put("key" + i, "value" + i, 1000));
+        }
+        
+        for(int i=0;i<10;i++){
+            p(client.get("key" + i));
+        }
     }
     
     static void tRequests() throws Exception {
