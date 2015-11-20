@@ -43,24 +43,26 @@ public class TStandAloneClient {
         String clusterConfig = "127.0.0.1:23290, 127.0.0.1:23291";
         ServerCacheClient client = new ServerCacheClient(clusterConfig, 2000, 3000);
 
-        ExecutorService execService = Executors.newFixedThreadPool(50);
+        ExecutorService execService = Executors.newFixedThreadPool(10);
         long ct = 1L;
         while (true) {
-            execService.execute(new ClientThread(client, ct));
+            if( (ct % 2) ==0){
+                execService.execute(new ClientThreadPut(client, (ct % 100)));
+            }else{
+                execService.execute(new ClientThreadGet(client, (ct % 100)));
+            }
             ++ct;
         }
     }
 
-    private class ClientThread implements Runnable {
+    private class ClientThreadGet implements Runnable {
 
         private final ServerCacheClient client;
-        long i = 0;
-        long j = 0;
+        private final long key;
 
-        ClientThread(ServerCacheClient client, long ct) {
+        ClientThreadGet(ServerCacheClient client, long key) {
             this.client = client;
-            i = ct % 2;
-            j = ct % 100;
+            this.key = key;
         }
 
         @Override
@@ -73,54 +75,42 @@ public class TStandAloneClient {
                     p("time: " + time);
                 }
             } catch (Exception e) {
-                p("error client thread: " + e);
+                p("error client get thread: " + e);
             }
         }
 
-        void intrun() {
-            long start = System.currentTimeMillis();
-            Random rnd = new Random();
-            long time = (System.currentTimeMillis() - start);
-            if (time > 200) {
-                p("new random time: " + time);
-            }
-            try {
-                start = System.currentTimeMillis();
-                long sleeptime = rnd.nextInt(1000);
-                //Thread.sleep(sleeptime);
-                while ((System.currentTimeMillis() - start) < sleeptime) {
-                }
-                //time = System.currentTimeMillis() - start;
-                if (time > 1100) {
-                    p("sleep time: " + time + ", sleeptime: " + sleeptime);
-                }
-            } catch (Exception e) {
-            }
+        void intrun() throws IOException, Exception {
+            p(client.get("key" + key));
+        }
+    }
+    
+    private class ClientThreadPut implements Runnable {
 
+        private final ServerCacheClient client;
+        private final long key;
+
+        ClientThreadPut(ServerCacheClient client, long key) {
+            this.client = client;
+            this.key = key;
+        }
+
+        @Override
+        public void run() {
             try {
-                if (i == 0) {
-                    start = System.currentTimeMillis();
-                    p(client.put("key" + j, "value" + j, 10000));
-                    time = System.currentTimeMillis() - start;
-                    if (time > 2000) {
-                        p("put time: " + time);
-                    }
-                } else if (i == 1) {
-                    start = System.currentTimeMillis();
-                    p(client.get("key" + j));
-                    time = System.currentTimeMillis() - start;
-                    if (time > 2000) {
-                        p("get time: " + time);
-                    }
-                } else {
-                    p("invalid i: " + i);
-                    System.exit(0);
+                long start = System.currentTimeMillis();
+                intrun();
+                long time = (System.currentTimeMillis() - start);
+                if (time > 3000) {
+                    p("time: " + time);
                 }
             } catch (Exception e) {
-                p("error: " + e);
+                p("error client get thread: " + e);
             }
         }
 
+        void intrun() throws IOException, Exception {
+            p(client.put("key" + key, "value" + key, 20000));
+        }
     }
 
     static void tServerCacheClient() throws Exception {
