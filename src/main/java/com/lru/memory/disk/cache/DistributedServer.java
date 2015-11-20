@@ -4,12 +4,16 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author sathayeg
  */
 class DistributedServer implements Runnable {
+    
+    private static final Logger log = LoggerFactory.getLogger(DistributedServer.class);
     
     static final byte ServerErrorLevelSevere_CacheNameDoesNotExist = 23;
     static final byte ServerErrorLevelSevere_SelfIdentification = 22;
@@ -37,6 +41,7 @@ class DistributedServer implements Runnable {
     }
 
     void startServer() throws IOException {
+        log.info("Server start on port: " + this.port + ", thread pool size: " + this.distributedManager.getConfig().getServerThreadPoolSize());
         try{
             this.serverSocket = new ServerSocket(port);
             while(true){

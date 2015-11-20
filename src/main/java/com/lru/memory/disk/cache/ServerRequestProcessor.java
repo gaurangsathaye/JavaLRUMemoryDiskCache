@@ -59,7 +59,12 @@ public class ServerRequestProcessor implements Runnable {
             br = new BufferedReader(isr);
 
             String request = br.readLine();
+            long start = System.currentTimeMillis();
             Map<String, Object> reqMap = ServerProtocol.parseRequestResponse(request);
+            long time = System.currentTimeMillis() - start;
+            if(time > 1000){
+                log.info("parse request response time: " + time);
+            }
             boolean put = false;
             if(reqMap.containsKey(ServerProtocol.KeyKey) && reqMap.containsKey(ServerProtocol.KeyTtlMillis) && reqMap.containsKey(ServerProtocol.KeyValue)){
                 put = true;
@@ -80,8 +85,18 @@ public class ServerRequestProcessor implements Runnable {
                 long ttl = (long) reqMap.get(ServerProtocol.KeyTtlMillis);
                 CacheEntry<String> ce = new CacheEntry<>(value, System.currentTimeMillis());
                 ce.setTtl(ttl);
+                start = System.currentTimeMillis();
                 this.cache.putOnly(key, ce);
+                time = System.currentTimeMillis() - start;
+                if(time > 1000){
+                    log.info("put only time: " + time);
+                }
+                start = System.currentTimeMillis();
                 response = ServerProtocol.createResponseJson("put success");
+                time = System.currentTimeMillis() - start;
+                if(time > 1000){
+                    log.info("create response json time: " + time);
+                }
             }else{
                 Map<String, Object> map = this.cache.internalGetOnly(key, true);
                 boolean fromDisk = (Boolean) map.get(AbstractCacheService.KeyInternalGetFromDisk);

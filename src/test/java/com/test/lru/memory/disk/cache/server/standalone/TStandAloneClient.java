@@ -43,7 +43,7 @@ public class TStandAloneClient {
         String clusterConfig = "127.0.0.1:23290, 127.0.0.1:23291";
         ServerCacheClient client = new ServerCacheClient(clusterConfig, 2000, 3000);
 
-        ExecutorService execService = Executors.newFixedThreadPool(10);
+        ExecutorService execService = Executors.newFixedThreadPool(2);
         long ct = 1L;
         while (true) {
             if( (ct % 2) ==0){
