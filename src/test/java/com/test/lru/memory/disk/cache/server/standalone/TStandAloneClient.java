@@ -15,10 +15,14 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -42,28 +46,43 @@ public class TStandAloneClient {
 
     void tServerCacheClient() throws Exception {
         String clusterConfig = "127.0.0.1:23290, 127.0.0.1:23291";
-        ServerCacheClient client = new ServerCacheClient(clusterConfig, 5000, 10000);
+        ServerCacheClient client = new ServerCacheClient(clusterConfig, 1000, 2000);
         
         Random rnd = new Random();
         
-        for(int i=0;i<1000;i++){
+        ExecutorService es = Executors.newFixedThreadPool(15);
+        List<Future<String>> futures = new ArrayList<>();
+        
+        for(int i=0;i<10000;i++){
             //String put = client.put("key"+rnd.nextInt(20), "value"+rnd.nextInt(100), 10000);
             //String get = client.get("key"+rnd.nextInt(20));
             //p(put);
             //p(get);
+            //new Thread(new ClientThread(client, rnd)).start();
+            //es.execute(new ClientThread(client, rnd));
+            Future<String> submit = es.submit(new ClientThread(client, rnd));
+            futures.add(submit);
             
-            new Thread(new ClientThread(client, rnd)).start();
-            
+            /*
             long sleepTime = (long) (rnd.nextInt(10));
             //p("sleepTime: " + sleepTime);
             long start = System.currentTimeMillis();
             try{Thread.sleep(sleepTime);}catch(Exception e){}
             long time = System.currentTimeMillis() - start;
             //p("sleepTime: " + sleepTime + ", actual sleep time: " + time);
+            */
         }
+        
+        int i = 0;
+        for(Future<String> f : futures){
+            f.get();
+            ++i;
+        }
+        p("got futures: " + i);
+        System.exit(0);
     }
     
-    class ClientThread implements Runnable{
+    class ClientThread implements Callable<String>{
 
         private final ServerCacheClient client;
         private final Random rnd;
@@ -73,17 +92,32 @@ public class TStandAloneClient {
             this.rnd = rnd;
         }
 
-        @Override
+        /*@Override
         public void run() {
             try{
                 String put = client.put("key"+rnd.nextInt(20), "value"+rnd.nextInt(100), 10000);
                 String get = client.get("key"+rnd.nextInt(20));
-                p("thread: " + put);
-                p("thread: " + get);
+                p("es 1: " + put);
+                p("es 1: " + get);
             }catch(Exception e){
                 p("client thead error: " + e);
             }
-        }        
+        }   */     
+
+        @Override
+        public String call() throws Exception {
+            try{
+                long sleepTime = (long) (rnd.nextInt(100));
+                try{Thread.sleep(sleepTime);}catch(Exception e){}
+                String put = client.put("key"+rnd.nextInt(200), "value"+rnd.nextInt(100), 10000);
+                String get = client.get("key"+rnd.nextInt(200));
+                p("es 1: " + put);
+                p("es 1: " + get);
+            }catch(Exception e){
+                p("client thead error: " + e);
+            }
+            return "r";
+        }
     }
 
     static void tRequests() throws Exception {
