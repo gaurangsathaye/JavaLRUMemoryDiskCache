@@ -31,7 +31,12 @@ public class ServerRequestProcessor implements Runnable {
     @Override
     public void run() {
         try {
+            long start = System.currentTimeMillis();
             proc();
+            long time = (System.currentTimeMillis() - start);
+            if(time > 2000){
+                log.info("time: " + time);
+            }
         } catch (Exception e) {
             log.error("Error processing", e);
         }
