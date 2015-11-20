@@ -43,7 +43,7 @@ public class ExampleCache extends AbstractCacheService<ExampleObjectToCache>{
     }
 
     /*
-        You decide if your cached object is valid.
+        You decide if your cached object is fresh / valid.
 
         You can use timestamps, last modified or any other parameters to determine
         if your cached object is valid (return true), or whether it should be reloaded (return false).
