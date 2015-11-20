@@ -46,11 +46,11 @@ public class TStandAloneClient {
 
     void tServerCacheClient() throws Exception {
         String clusterConfig = "127.0.0.1:23290, 127.0.0.1:23291";
-        ServerCacheClient client = new ServerCacheClient(clusterConfig, 1000, 2000);
+        ServerCacheClient client = new ServerCacheClient(clusterConfig, 1000, 1000);
         
         Random rnd = new Random();
         
-        ExecutorService es = Executors.newFixedThreadPool(15);
+        ExecutorService es = Executors.newFixedThreadPool(200);
         List<Future<String>> futures = new ArrayList<>();
         
         for(int i=0;i<10000;i++){
@@ -107,7 +107,7 @@ public class TStandAloneClient {
         @Override
         public String call() throws Exception {
             try{
-                long sleepTime = (long) (rnd.nextInt(100));
+                long sleepTime = (long) (rnd.nextInt(1000));
                 try{Thread.sleep(sleepTime);}catch(Exception e){}
                 String put = client.put("key"+rnd.nextInt(200), "value"+rnd.nextInt(100), 10000);
                 String get = client.get("key"+rnd.nextInt(200));

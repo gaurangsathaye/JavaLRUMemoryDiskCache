@@ -95,7 +95,7 @@ public class Utl {
             fos = new FileOutputStream(pathAndFilename, false);
             oos = new ObjectOutputStream(fos);
             oos.writeObject(obj);
-            log.info("Utl.serialize : to: " + pathAndFilename);
+            //log.info("Utl.serialize : to: " + pathAndFilename);
         } catch (Exception e) {
             log.error("Unable to serialize: " + pathAndFilename, e);
         } finally {
@@ -118,7 +118,7 @@ public class Utl {
             File f = new File(pathAndFilename);
             if(f.exists() && (! f.isDirectory())){
                 f.delete();
-                log.info("Utl.deleteFile: " + pathAndFilename);
+                //log.info("Utl.deleteFile: " + pathAndFilename);
             }
         }catch(Exception e){
             log.error("Unable to delete file: " + pathAndFilename, e);
@@ -143,7 +143,7 @@ public class Utl {
             fis = new FileInputStream(f);
             ois = new ObjectInputStream(fis);
             Serializable serializable = ((Serializable) (ois.readObject()));
-            log.info("deserializeFile: " + pathAndFilename);
+            //log.info("deserializeFile: " + pathAndFilename);
             return serializable;
         } catch (Exception e) {
             log.error("Unable to deserialize: " + pathAndFilename, e);
