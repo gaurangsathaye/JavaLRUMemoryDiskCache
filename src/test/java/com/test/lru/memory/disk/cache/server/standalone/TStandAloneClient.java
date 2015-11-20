@@ -28,6 +28,8 @@ import java.util.concurrent.Future;
  * @author sathayeg
  */
 public class TStandAloneClient {
+    
+    static String data = "ijd98queua0e9ufoaijf09aye89u35huah987ftas9ft89qy23hr0wqeyrf0aywe09f8yq0897ebhrt089q7309r70q75908b39085v7bq3890r0q987r9087qb39804br7q890374br890q37r8907q3908b4yr778ayf0bayf80a7b89abe98f7ba08e7jaoijd98queua0e9ufoaijf09aye89u35huah987ftas9ft89qy23hr0wqeyrf0aywe09f8yq0897ebhrt089q7309r70q75908b39085v7bq3890r0q987r9087qb39804br7q890374br890q37r8907q3908b4yr778ayf0bayf80a7b89abe98f7ba08e7jaoijd98queua0e9ufoaijf09aye89u35huah987ftas9ft89qy23hr0wqeyrf0aywe09f8yq0897ebhrt089q7309r70q75908b39085v7bq3890r0q987r9087qb39804br7q890374br890q37r8907q3908b4yr778ayf0bayf80a7b89abe98f7ba08e7jaoijd98queua0e9ufoaijf09aye89u35huah987ftas9ft89qy23hr0wqeyrf0aywe09f8yq0897ebhrt089q7309r70q75908b39085v7bq3890r0q987r9087qb39804br7q890374br890q37r8907q3908b4yr778ayf0bayf80a7b89abe98f7ba08e7jaoijd98queua0e9ufoaijf09aye89u35huah987ftas9ft89qy23hr0wqeyrf0aywe09f8yq0897ebhrt089q7309r70q75908b39085v7bq3890r0q987r9087qb39804br7q890374br890q37r8907q3908b4yr778ayf0bayf80a7b89abe98f7ba08e7jaoijd98queua0e9ufoaijf09aye89u35huah987ftas9ft89qy23hr0wqeyrf0aywe09f8yq0897ebhrt089q7309r70q75908b39085v7bq3890r0q987r9087qb39804br7q890374br890q37r8907q3908b4yr778ayf0bayf80a7b89abe98f7ba08e7jaoijd98queua0e9ufoaijf09aye89u35huah987ftas9ft89qy23hr0wqeyrf0aywe09f8yq0897ebhrt089q7309r70q75908b39085v7bq3890r0q987r9087qb39804br7q890374br890q37r8907q3908b4yr778ayf0bayf80a7b89abe98f7ba08e7";
 
     public static void main(String[] args) {
         try {
@@ -43,15 +45,16 @@ public class TStandAloneClient {
     }    
 
     void tServerCacheClient() throws Exception {
+        long start = System.currentTimeMillis();
         String clusterConfig = "127.0.0.1:23290, 127.0.0.1:23291";
         ServerCacheClient client = new ServerCacheClient(clusterConfig, 1000, 1000);
         
         Random rnd = new Random();
         
-        ExecutorService es = Executors.newFixedThreadPool(200);
+        ExecutorService es = Executors.newFixedThreadPool(60);
         List<Future<String>> futures = new ArrayList<>();
         
-        for(int i=0;i<10000;i++){
+        for(int i=0;i<5000;i++){
             //String put = client.put("key"+rnd.nextInt(20), "value"+rnd.nextInt(100), 10000);
             //String get = client.get("key"+rnd.nextInt(20));
             //p(put);
@@ -76,7 +79,10 @@ public class TStandAloneClient {
             f.get();
             ++i;
         }
-        p("got futures: " + i);
+        long time = System.currentTimeMillis() - start;
+        double timeSec = (double) ( ((double)time) / 1000 );
+        double throughput = ((double) i) / timeSec;
+        p("got futures: " + i + ", time: " + time + ", throughput: " + throughput);
         System.exit(0);
     }
     
@@ -89,25 +95,13 @@ public class TStandAloneClient {
             this.client = client;
             this.rnd = rnd;
         }
-
-        /*@Override
-        public void run() {
-            try{
-                String put = client.put("key"+rnd.nextInt(20), "value"+rnd.nextInt(100), 10000);
-                String get = client.get("key"+rnd.nextInt(20));
-                p("es 1: " + put);
-                p("es 1: " + get);
-            }catch(Exception e){
-                p("client thead error: " + e);
-            }
-        }   */     
-
+        
         @Override
         public String call() throws Exception {
             try{
                 long sleepTime = (long) (rnd.nextInt(1000));
                 try{Thread.sleep(sleepTime);}catch(Exception e){}
-                String put = client.put("key"+rnd.nextInt(200), "value"+rnd.nextInt(100), 10000);
+                String put = client.put("key"+rnd.nextInt(200), data + "-" + rnd.nextInt(100), 500000);
                 String get = client.get("key"+rnd.nextInt(200));
                 p("es 1: " + put);
                 p("es 1: " + get);

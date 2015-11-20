@@ -1,5 +1,7 @@
 package com.lru.memory.disk.cache;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -27,17 +29,21 @@ class DistributedServerRequestProcessor implements Runnable {
 
     @Override
     public void run() {   
-        InputStream is = null;        
-        OutputStream os = null;
-        
-        ObjectOutputStream oos = null;
+        InputStream is = null;
+        BufferedInputStream bis = null;
         ObjectInputStream ois = null;
         
-        AutoCloseable closeables[] = {is, os, oos, ois, socket};
+        OutputStream os = null;
+        BufferedOutputStream bos = null;
+        ObjectOutputStream oos = null;
+        
+        
+        AutoCloseable closeables[] = {is, bis, ois, os, bos, oos, socket};
         
         try{            
-            is = socket.getInputStream();           
-            ois = new ObjectInputStream(is);
+            is = socket.getInputStream();
+            bis = new BufferedInputStream(is);
+            ois = new ObjectInputStream(bis);
             DistributedRequestResponse<Serializable> distrr = (DistributedRequestResponse<Serializable>) ois.readObject();
             String cacheKey = distrr.getClientSetCacheKey();
             String cacheName = distrr.getClientSetCacheName();
@@ -79,7 +85,8 @@ class DistributedServerRequestProcessor implements Runnable {
             
             if(sendError){
                 os = socket.getOutputStream();
-                oos = new ObjectOutputStream(os);
+                bos = new BufferedOutputStream(os);
+                oos = new ObjectOutputStream(bos);
                 oos.writeObject(distrr);
                 oos.flush();
                 return;
@@ -95,7 +102,8 @@ class DistributedServerRequestProcessor implements Runnable {
             }
             
             os = socket.getOutputStream();
-            oos = new ObjectOutputStream(os);
+            bos = new BufferedOutputStream(os);
+            oos = new ObjectOutputStream(bos);
             oos.writeObject(distrr);
             oos.flush(); 
         }catch(Exception e){

@@ -1,6 +1,8 @@
 package com.lru.memory.disk.cache;
 
 import com.lru.memory.disk.cache.exceptions.BadRequestException;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -109,14 +111,17 @@ class DistributedClient {
         if(null == clusterServerForCacheKey) throw new BadRequestException("clusterServerForCacheKey is null", null);
         
         InputStream is = null;
-        OutputStream os = null;
-        
-        ObjectOutputStream oos = null;
+        BufferedInputStream bis = null;
         ObjectInputStream ois = null;
+        
+        OutputStream os = null;
+        BufferedOutputStream bos = null;
+        ObjectOutputStream oos = null;
+        
 
         Socket clientSock = null;
 
-        AutoCloseable closeables[] = {is, os, oos, ois, clientSock};
+        AutoCloseable closeables[] = {is, bis, ois, os, bos, oos, clientSock};
         try {            
             //clientSock = new Socket(clusterServerForCacheKey.getHost(), clusterServerForCacheKey.getPort());
             clientSock = new Socket();
@@ -127,12 +132,14 @@ class DistributedClient {
                             key, cacheName);
             
             os = clientSock.getOutputStream();
-            oos = new ObjectOutputStream(os);
+            bos = new BufferedOutputStream(os);
+            oos = new ObjectOutputStream(bos);
             oos.writeObject(distrr);
             oos.flush(); 
             
             is = clientSock.getInputStream();
-            ois = new ObjectInputStream(is);
+            bis = new BufferedInputStream(is);
+            ois = new ObjectInputStream(bis);
             DistributedRequestResponse<Serializable> resp = (DistributedRequestResponse<Serializable>) ois.readObject();
             return resp;
         } finally {
