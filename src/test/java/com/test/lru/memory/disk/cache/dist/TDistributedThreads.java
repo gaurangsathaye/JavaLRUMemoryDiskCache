@@ -28,8 +28,8 @@ public class TDistributedThreads {
     }
     
     static int cacheSize = 200;
-    static int loopCount = 5;//500;
-    static int randomRange = 2;//220;
+    static int loopCount = 1000;//500;
+    static int randomRange = 200;//220;
     static int threadPoolSize = 200;
     static boolean diskCache = false;
     void distribute() throws Exception {
@@ -42,12 +42,12 @@ public class TDistributedThreads {
         List<Cache> cacheList = new ArrayList<>();
         cacheList.add(cache1);
         cacheList.add(cache2);
-        //cacheList.add(cache3);
-        //cacheList.add(cache4);
+        cacheList.add(cache3);
+        cacheList.add(cache4);
 
         String clusterConfig = "127.0.0.1:19000, 127.0.0.1:19001";
 
-        DistributedConfig config = new DistributedConfig(250, 1000, 1000, true);
+        DistributedConfig config = new DistributedConfig(threadPoolSize + 50, 1000, 1000, true);
         Distributor.distribute(19000, clusterConfig, config, cache1, cache3);
         Distributor.distribute(19001, clusterConfig, config, cache2, cache4);
         

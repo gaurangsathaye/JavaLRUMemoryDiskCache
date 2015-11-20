@@ -1,6 +1,5 @@
 package com.test.lru.memory.disk.cache.server.standalone;
 
-import com.lru.memory.disk.cache.DistributedConfigServer;
 import com.lru.memory.disk.cache.ServerCacheClient;
 import com.lru.memory.disk.cache.ServerProtocol;
 import com.lru.memory.disk.cache.Utl;
@@ -23,7 +22,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 /**
  *
