@@ -29,114 +29,61 @@ public class TStandAloneClient {
 
     public static void main(String[] args) {
         try {
+            TStandAloneClient tsc = new TStandAloneClient();
+            
             //runTClient1();
 
             //tRequests();
-            //tServerCacheClient();
-            new TStandAloneClient().tServerCacheClientThreads();
+            tsc.tServerCacheClient();
         } catch (Exception e) {
             p("error: " + e);
         }
-    }
+    }    
 
-    void tServerCacheClientThreads() throws Exception {
+    void tServerCacheClient() throws Exception {
         String clusterConfig = "127.0.0.1:23290, 127.0.0.1:23291";
-        ServerCacheClient client = new ServerCacheClient(clusterConfig, 2000, 3000);
-
-        ExecutorService execService = Executors.newFixedThreadPool(2);
-        long ct = 1L;
-        while (true) {
-            if( (ct % 2) ==0){
-                execService.execute(new ClientThreadPut(client, (ct % 100)));
-            }else{
-                execService.execute(new ClientThreadGet(client, (ct % 100)));
-            }
-            ++ct;
-        }
-    }
-
-    private class ClientThreadGet implements Runnable {
-
-        private final ServerCacheClient client;
-        private final long key;
-
-        ClientThreadGet(ServerCacheClient client, long key) {
-            this.client = client;
-            this.key = key;
-        }
-
-        @Override
-        public void run() {
-            try {
-                long start = System.currentTimeMillis();
-                intrun();
-                long time = (System.currentTimeMillis() - start);
-                if (time > 3000) {
-                    p("time: " + time);
-                }
-            } catch (Exception e) {
-                p("error client get thread: " + e);
-            }
-        }
-
-        void intrun() throws IOException, Exception {
-            p(client.get("key" + key));
+        ServerCacheClient client = new ServerCacheClient(clusterConfig, 5000, 10000);
+        
+        Random rnd = new Random();
+        
+        for(int i=0;i<1000;i++){
+            //String put = client.put("key"+rnd.nextInt(20), "value"+rnd.nextInt(100), 10000);
+            //String get = client.get("key"+rnd.nextInt(20));
+            //p(put);
+            //p(get);
+            
+            new Thread(new ClientThread(client, rnd)).start();
+            
+            long sleepTime = (long) (rnd.nextInt(10));
+            //p("sleepTime: " + sleepTime);
+            long start = System.currentTimeMillis();
+            try{Thread.sleep(sleepTime);}catch(Exception e){}
+            long time = System.currentTimeMillis() - start;
+            //p("sleepTime: " + sleepTime + ", actual sleep time: " + time);
         }
     }
     
-    private class ClientThreadPut implements Runnable {
+    class ClientThread implements Runnable{
 
         private final ServerCacheClient client;
-        private final long key;
-
-        ClientThreadPut(ServerCacheClient client, long key) {
+        private final Random rnd;
+        
+        ClientThread(ServerCacheClient client, Random rnd){
             this.client = client;
-            this.key = key;
+            this.rnd = rnd;
         }
 
         @Override
         public void run() {
-            try {
-                long start = System.currentTimeMillis();
-                intrun();
-                long time = (System.currentTimeMillis() - start);
-                if (time > 3000) {
-                    p("time: " + time);
-                }
-            } catch (Exception e) {
-                p("error client get thread: " + e);
+            try{
+                String put = client.put("key"+rnd.nextInt(20), "value"+rnd.nextInt(100), 10000);
+                String get = client.get("key"+rnd.nextInt(20));
+                p("thread: " + put);
+                p("thread: " + get);
+            }catch(Exception e){
+                p("client thead error: " + e);
             }
-        }
-
-        void intrun() throws IOException, Exception {
-            p(client.put("key" + key, "value" + key, 20000));
-        }
-    }
-
-    static void tServerCacheClient() throws Exception {
-        String clusterConfig = "127.0.0.1:23290, 127.0.0.1:23291";
-        ServerCacheClient client = new ServerCacheClient(clusterConfig, 5000, 10000);
-
-        for (int i = 0; i < 2; i++) {
-            p(client.put("key" + i, "value" + i, 600000));
-        }
-
-        for (int i = 0; i < 2; i++) {
-            p(client.get("key" + i));
-        }
-
-        for (int i = 0; i < 2; i++) {
-            p(client.get("key" + i));
-        }
-
-        try {
-            Thread.sleep(25000);
-        } catch (Exception e) {
-        }
-
-        for (int i = 0; i < 2; i++) {
-            p(client.get("key" + i));
-        }
+        }        
     }
 
     static void tRequests() throws Exception {

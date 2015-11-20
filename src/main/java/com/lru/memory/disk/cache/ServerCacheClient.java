@@ -1,7 +1,10 @@
 package com.lru.memory.disk.cache;
 
 import com.lru.memory.disk.cache.exceptions.BadRequestException;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -40,53 +43,86 @@ public class ServerCacheClient {
     }
     
     public String get(String key) throws BadRequestException, IOException, Exception{
+        DistributedConfigServer remoteServer = this.getServerForKey(key);
+        return remoteCall(remoteServer.getHost(), remoteServer.getPort(), ServerProtocol.createGetRequestJson(key));
+        /*
         Exception ex = null;
         for(int i=0;i<RemoteAttempts;i++){
+            long start = System.currentTimeMillis();
             DistributedConfigServer remoteServer = this.getServerForKey(key);
+            long time = System.currentTimeMillis() - start;
+            if(time > 1000){
+                log.info("get getServerforkey, time: " + time);
+            }
             try{
-                return remoteCall(remoteServer.getHost(), remoteServer.getPort(), ServerProtocol.createGetRequestJson(key));
+                start = System.currentTimeMillis();
+                String res = remoteCall(remoteServer.getHost(), remoteServer.getPort(), ServerProtocol.createGetRequestJson(key));
+                time = System.currentTimeMillis() - start;
+                if(time > 1000){
+                    log.info("get remote call time: " + time);
+                }
+                return res;
             }catch(BadRequestException | IOException e){
                 log.error("Unable to get data from: " + remoteServer.getServerId(), e);
                 remoteServer.setNetworkErrorNextAttemptTimestamp();
                 ex = e;
             }
         }
-        throw ex;
+        throw ex;*/
     }
     
-    public String put(String key, String value, long ttlMillis) throws BadRequestException, IOException, Exception {       
+    public String put(String key, String value, long ttlMillis) throws BadRequestException, IOException, Exception { 
+        DistributedConfigServer remoteServer = this.getServerForKey(key);
+        return remoteCall(remoteServer.getHost(), remoteServer.getPort(), ServerProtocol.createPutRequestJson(key, value, ttlMillis));
+        
+        /*
         Exception ex = null;
         for(int i=0;i<RemoteAttempts;i++){
+            long start = System.currentTimeMillis();
             DistributedConfigServer remoteServer = this.getServerForKey(key);
+            long time = System.currentTimeMillis() - start;
+            if(time > 1000){
+                log.info("put get server for key time: " + time);
+            }
             try{
-                return remoteCall(remoteServer.getHost(), remoteServer.getPort(), ServerProtocol.createPutRequestJson(key, value, ttlMillis));
+                start = System.currentTimeMillis();
+                String res = remoteCall(remoteServer.getHost(), remoteServer.getPort(), ServerProtocol.createPutRequestJson(key, value, ttlMillis));
+                time = System.currentTimeMillis() - start;
+                if(time > 1000){
+                    log.info("put remote call time: " + time);
+                }
             }catch(BadRequestException | IOException e){
                 log.error("Unable to put data to: " + remoteServer.getServerId(), e);
                 remoteServer.setNetworkErrorNextAttemptTimestamp();
                 ex = e;
             }
         }
-        throw ex;
+        throw ex;*/
     }
     
     private DistributedConfigServer getServerForKey(String key) throws BadRequestException{
-        return this.distMgr.getClusterServerForCacheKeyRotate(key);
+        //return this.distMgr.getClusterServerForCacheKeyRotate(key);
+        
+        return this.distMgr.getClusterServerForCacheKey(key);
     }
     
     private String remoteCall(String host, int port, String request) throws SocketException, IOException, BadRequestException {
         if(Utl.areBlank(host, request)) throw new BadRequestException("Host or request is blank", null);
         
         InputStream is = null; 
+        BufferedInputStream bis = null;
         InputStreamReader isr = null;
         BufferedReader br = null;
         
         OutputStream os = null;
+        BufferedOutputStream bos = null;
         OutputStreamWriter osw = null;
+        BufferedWriter bw = null;
         PrintWriter pw = null;
 
         Socket clientSock = null;
 
-        AutoCloseable closeables[] = {is, isr, br, os, osw, pw, clientSock};
+        AutoCloseable closeables[] = {os, bos, osw, bw, pw, is, bis, isr, br, clientSock};
         try {            
             //clientSock = new Socket(clusterServerForCacheKey.getHost(), clusterServerForCacheKey.getPort());
             clientSock = new Socket();
@@ -94,15 +130,18 @@ public class ServerCacheClient {
             clientSock.setSoTimeout(this.clientReadTimeoutMillis);
             
             os = clientSock.getOutputStream();
-            osw = new OutputStreamWriter(os, "UTF-8");
-            pw = new PrintWriter(osw, true);
+            bos = new BufferedOutputStream(os);
+            osw = new OutputStreamWriter(bos, "UTF-8");
+            bw = new BufferedWriter(osw);
+            pw = new PrintWriter(bw, true);
             pw.println(request);
-            os.flush();
-            osw.flush();
-            pw.flush();
+            //os.flush();
+            //osw.flush();
+            //pw.flush();
             
             is = clientSock.getInputStream();
-            isr = new InputStreamReader(is, "UTF-8");
+            bis = new BufferedInputStream(is);
+            isr = new InputStreamReader(bis, "UTF-8");
             br = new BufferedReader(isr);
             
             return br.readLine();
