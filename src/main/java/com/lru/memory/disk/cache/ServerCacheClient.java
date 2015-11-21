@@ -48,19 +48,10 @@ public class ServerCacheClient {
         /*
         Exception ex = null;
         for(int i=0;i<RemoteAttempts;i++){
-            long start = System.currentTimeMillis();
             DistributedConfigServer remoteServer = this.getServerForKey(key);
-            long time = System.currentTimeMillis() - start;
-            if(time > 1000){
-                log.info("get getServerforkey, time: " + time);
-            }
+            
             try{
-                start = System.currentTimeMillis();
                 String res = remoteCall(remoteServer.getHost(), remoteServer.getPort(), ServerProtocol.createGetRequestJson(key));
-                time = System.currentTimeMillis() - start;
-                if(time > 1000){
-                    log.info("get remote call time: " + time);
-                }
                 return res;
             }catch(BadRequestException | IOException e){
                 log.error("Unable to get data from: " + remoteServer.getServerId(), e);
@@ -78,19 +69,11 @@ public class ServerCacheClient {
         /*
         Exception ex = null;
         for(int i=0;i<RemoteAttempts;i++){
-            long start = System.currentTimeMillis();
             DistributedConfigServer remoteServer = this.getServerForKey(key);
-            long time = System.currentTimeMillis() - start;
-            if(time > 1000){
-                log.info("put get server for key time: " + time);
-            }
+            
             try{
-                start = System.currentTimeMillis();
                 String res = remoteCall(remoteServer.getHost(), remoteServer.getPort(), ServerProtocol.createPutRequestJson(key, value, ttlMillis));
-                time = System.currentTimeMillis() - start;
-                if(time > 1000){
-                    log.info("put remote call time: " + time);
-                }
+                
             }catch(BadRequestException | IOException e){
                 log.error("Unable to put data to: " + remoteServer.getServerId(), e);
                 remoteServer.setNetworkErrorNextAttemptTimestamp();

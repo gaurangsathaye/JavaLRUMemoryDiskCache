@@ -141,7 +141,7 @@ public abstract class AbstractCacheService<T> implements DiskOps {
             this.statsRemoteAttempts.incrementAndGet();
             
             DistributedRequestResponse<Serializable> distrr = this.distClient.distCacheGet(cacheName, key, clusterServerForCacheKey, this.statsRemoteCachedResponses);
-            log.info("Cache name: " + cacheName + ", distrr for key: " + key + " :: " + distrr.toString());
+            //log.info("Cache name: " + cacheName + ", distrr for key: " + key + " :: " + distrr.toString());
 
             if (distrr.getServerSetErrorLevel() >= DistributedServer.ServerErrorLevelSevere) {
                 this.statsRemoteSevereErrs.incrementAndGet();
