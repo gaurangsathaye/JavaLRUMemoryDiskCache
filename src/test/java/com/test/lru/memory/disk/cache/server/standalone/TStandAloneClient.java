@@ -51,7 +51,7 @@ public class TStandAloneClient {
         
         Random rnd = new Random();
         
-        ExecutorService es = Executors.newFixedThreadPool(60);
+        ExecutorService es = Executors.newFixedThreadPool(100);
         List<Future<String>> futures = new ArrayList<>();
         
         for(int i=0;i<5000;i++){

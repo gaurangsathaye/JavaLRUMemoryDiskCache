@@ -31,7 +31,7 @@ public class TDistributedThreads {
     static int loopCount = 1000;//500;
     static int randomRange = 200;//220;
     static int threadPoolSize = 200;
-    static boolean diskCache = false;
+    static boolean diskCache = true;
     void distribute() throws Exception {
         p("start distribute");
         Cache cache1 = new Cache("teaCache", cacheSize, diskCache, "./datadir/server1/teacache", new Dao("server1"));
